@@ -1,4 +1,4 @@
-package ru.spbau.mit.oquechy.threadpull;
+package ru.spbau.mit.oquechy.lazy;
 
 import org.jetbrains.annotations.Nullable;
 

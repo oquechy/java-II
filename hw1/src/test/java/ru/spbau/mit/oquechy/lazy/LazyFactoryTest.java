@@ -1,4 +1,4 @@
-package ru.spbau.mit.oquechy.threadpull;
+package ru.spbau.mit.oquechy.lazy;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -109,6 +109,20 @@ public class LazyFactoryTest {
     }
 
     @Test
+    public void testCreateSingleThreadLazyLaziness() {
+
+        @NotNull final Supplier<String> shouldNotBeCalled = () -> {
+            throw new RuntimeException("Supplier was called");
+        };
+
+        @SuppressWarnings("unused") Lazy<String> lazy;
+        for (int i = 0; i < 10; i++) {
+            //noinspection UnusedAssignment
+            lazy = LazyFactory.createSingleThreadLazy(shouldNotBeCalled);
+        }
+    }
+
+    @Test
     public void testCreateMultiThreadLazyEveryTimeSameObject() {
 
         @NotNull final Supplier<String> cyclicSupplier = new Supplier<String>() {
@@ -136,5 +150,35 @@ public class LazyFactoryTest {
         for (@NotNull Thread thread : threads) {
             thread.start();
         }
+    }
+
+    @Test
+    public void testCreateMultiThreadLazyNoDataRaces() throws InterruptedException {
+
+        @NotNull final Supplier<Integer> incrementer = new Supplier<Integer>() {
+            private int i = 0;
+
+            @NotNull
+            @Override
+            public Integer get() {
+                return i++;
+            }
+        };
+
+        @NotNull Thread[] threads = new Thread[10000];
+
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(() -> LazyFactory.createMultiThreadLazy(incrementer).get());
+        }
+
+        for (@NotNull Thread thread : threads) {
+            thread.start();
+        }
+
+        for (@NotNull Thread thread : threads) {
+            thread.join();
+        }
+
+        assertThat(incrementer.get(), is(10000));
     }
 }
