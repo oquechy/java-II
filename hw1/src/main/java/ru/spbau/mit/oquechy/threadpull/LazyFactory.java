@@ -9,7 +9,7 @@ public class LazyFactory {
     private static final Object mutex = new Object();
 
     public static <T> Lazy<T> createSingleThreadLazy(Supplier<T> sup) {
-        return new Lazy<>() {
+        return new Lazy<T>() {
             private T result;
             @Nullable
             private Supplier<T> supplier = sup;
@@ -27,7 +27,7 @@ public class LazyFactory {
     }
 
     public static <T> Lazy<T> createMultiThreadLazy(Supplier<T> sup) {
-        return new Lazy<>() {
+        return new Lazy<T>() {
             private T result;
             @Nullable
             private Supplier<T> supplier = sup;
