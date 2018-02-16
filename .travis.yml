@@ -1,0 +1,10 @@
+language: java
+
+jdk:
+  - oraclejdk9
+
+os:
+  - linux
+
+script: bash build.sh
+
