@@ -115,10 +115,9 @@ public class LazyFactoryTest {
             throw new RuntimeException("Supplier was called");
         };
 
-        @SuppressWarnings("unused") Lazy<String> lazy;
         for (int i = 0; i < 10; i++) {
-            //noinspection UnusedAssignment
-            lazy = LazyFactory.createSingleThreadLazy(shouldNotBeCalled);
+            //noinspection UnusedAssignment,ResultOfMethodCallIgnored
+            LazyFactory.createSingleThreadLazy(shouldNotBeCalled);
         }
     }
 
@@ -161,14 +160,19 @@ public class LazyFactoryTest {
             @NotNull
             @Override
             public Integer get() {
-                return i++;
+                for (int j = 0; j < 100; j++) {
+                    i++;
+                }
+                return i;
             }
         };
 
-        @NotNull Thread[] threads = new Thread[10000];
+        @NotNull Lazy<Integer> lazyIncrementer = LazyFactory.createMultiThreadLazy(incrementer);
+
+        @NotNull Thread threads[] = new Thread[100];
 
         for (int i = 0; i < threads.length; i++) {
-            threads[i] = new Thread(() -> LazyFactory.createMultiThreadLazy(incrementer).get());
+            threads[i] = new Thread(lazyIncrementer::get);
         }
 
         for (@NotNull Thread thread : threads) {
@@ -179,6 +183,6 @@ public class LazyFactoryTest {
             thread.join();
         }
 
-        assertThat(incrementer.get(), is(10000));
+        assertThat(incrementer.get(), is(200));
     }
 }

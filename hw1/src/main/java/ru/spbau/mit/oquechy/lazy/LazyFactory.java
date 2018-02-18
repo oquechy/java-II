@@ -16,8 +16,6 @@ import java.util.function.Supplier;
  */
 public class LazyFactory {
 
-    private static final Object mutex = new Object();
-
     /**
      * Returns {@link Lazy} for working in single thread.
      * @param sup computation to be called
@@ -58,7 +56,7 @@ public class LazyFactory {
                     return result;
                 }
 
-                synchronized (mutex) {
+                synchronized (this) {
                     if (supplier != null) {
                         result = supplier.get();
                         supplier = null;
