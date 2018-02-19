@@ -18,20 +18,20 @@ public class LazyFactory {
 
     /**
      * Returns {@link Lazy} for working in single thread.
-     * @param sup computation to be called
+     * @param supplier computation to be called
      * @param <T> type of result of the computation
      */
-    public static <T> Lazy<T> createSingleThreadLazy(Supplier<T> sup) {
+    public static <T> Lazy<T> createSingleThreadLazy(Supplier<T> supplier) {
         return new Lazy<T>() {
             private T result;
             @Nullable
-            private Supplier<T> supplier = sup;
+            private Supplier<T> sup = supplier;
 
             @Override
             public T get() {
-                if (supplier != null) {
-                    result = supplier.get();
-                    supplier = null;
+                if (sup != null) {
+                    result = sup.get();
+                    sup = null;
                 }
 
                 return result;
@@ -41,25 +41,26 @@ public class LazyFactory {
 
     /**
      * Returns {@link Lazy} for working in several threads.
-     * @param sup computation to be called
+     * @param supplier computation to be called
      * @param <T> type of result of the computation
      */
-    public static <T> Lazy<T> createMultiThreadLazy(Supplier<T> sup) {
+    public static <T> Lazy<T> createMultiThreadLazy(Supplier<T> supplier) {
         return new Lazy<T>() {
             private T result;
             @Nullable
-            private Supplier<T> supplier = sup;
+            volatile private Supplier<T> sup = supplier;
 
             @Override
             public T get() {
-                if (supplier == null) {
+                if (sup == null) {
                     return result;
                 }
 
                 synchronized (this) {
-                    if (supplier != null) {
-                        result = supplier.get();
-                        supplier = null;
+                    if (sup != null) {
+                        // sup may become null only in this synchronized block
+                        result = sup.get();
+                        sup = null;
                     }
                 }
                 return result;
