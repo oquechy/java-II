@@ -75,6 +75,7 @@ public class ThreadPoolImpl {
     private class LightFutureImpl<T> implements LightFuture<T> {
         private T result;
         private volatile boolean isReady = false;
+        @NotNull
         private final Object sync = new Object();
         private Supplier<T> supplier;
         @Nullable

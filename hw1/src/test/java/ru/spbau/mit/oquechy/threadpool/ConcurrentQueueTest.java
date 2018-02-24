@@ -11,6 +11,7 @@ import static org.junit.Assert.*;
 
 public class ConcurrentQueueTest {
 
+    @NotNull
     private final static Object[] OBJECTS = {"Lisa", 0b101010, new Object(), '!',
             false, new IllegalArgumentException(), -1e18, 0x1};
 

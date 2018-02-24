@@ -15,7 +15,14 @@ import static org.junit.Assert.assertTrue;
 public class LightFutureImplTest {
 
     private int cnt;
-    private final Supplier<Integer> COUNTER = () -> cnt++;
+    @NotNull
+    private final Supplier<Integer> COUNTER = () -> {
+        synchronized (LightFutureImplTest.this) {
+            return cnt++;
+        }
+    };
+
+    @NotNull
     private final Supplier<?> THROWER = () -> {throw new IllegalArgumentException();};
 
     private ThreadPoolImpl threadPool;
@@ -51,19 +58,23 @@ public class LightFutureImplTest {
 
     @Test
     public void getWithComputation() throws LightExecutionException, InterruptedException {
+
         @NotNull LinkedList<LightFuture<Integer>> tasks = new LinkedList<>();
 
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 100; i++) {
             tasks.add(threadPool.assignTask(COUNTER));
         }
 
-        @NotNull boolean[] met = new boolean[40];
+        @NotNull boolean[] met = new boolean[tasks.size()];
 
         for (@NotNull LightFuture<Integer> task : tasks) {
             met[task.get()] = true;
         }
 
-        for (boolean b : met) {
+        for (int i = 0; i < met.length; i++) {
+            boolean b = met[i];
+            if (!b)
+                System.err.println(i);
             assertThat(b, is(true));
         }
     }

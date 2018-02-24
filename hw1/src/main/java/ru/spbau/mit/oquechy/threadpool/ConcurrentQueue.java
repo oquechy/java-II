@@ -13,6 +13,7 @@ public class ConcurrentQueue<E> {
 
     @NotNull
     private LinkedList<E> queue = new LinkedList<>();
+    @NotNull
     private final Object modifiedSync = new Object();
 
     /**

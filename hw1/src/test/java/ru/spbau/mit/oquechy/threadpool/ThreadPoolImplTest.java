@@ -14,9 +14,11 @@ import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 import static org.junit.Assert.*;
 
 public class ThreadPoolImplTest {
+    @NotNull
     private static final Supplier<Integer> RANDOM_SUPPLIER = () -> (new Random().nextInt());
 
     private static final int CONSTANT = 0b101010;
+    @NotNull
     private static final Supplier<Integer> CONSTANT_SUPPLIER = () -> CONSTANT;
 
     @Test
