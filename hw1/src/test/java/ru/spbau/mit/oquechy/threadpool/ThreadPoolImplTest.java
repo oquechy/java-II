@@ -69,55 +69,76 @@ public class ThreadPoolImplTest {
     @Test
     public void threadsCount() throws InterruptedException, LightExecutionException {
         ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
-        for (int n = 10; n <= 100; n += 10) {
-            int threadsOnStart = threadGroup.activeCount();
-            @NotNull ThreadPoolImpl threadPool = new ThreadPoolImpl(n);
-            assertThat(threadGroup.activeCount(), greaterThanOrEqualTo(threadsOnStart + n));
+        int n = 100;
+        int threadsOnStart = threadGroup.activeCount();
+        @NotNull ThreadPoolImpl threadPool = new ThreadPoolImpl(n);
+        assertThat(threadGroup.activeCount(), greaterThanOrEqualTo(threadsOnStart + n));
 
-            @NotNull HashSet<Long> threadIDs = new HashSet<>();
-            @NotNull Object[] sync = new Object[n - 1];
-            for (int i = 0; i < sync.length; i++) {
-                sync[i] = new Object();
-            }
+        @NotNull HashSet<Long> threadIDs = new HashSet<>();
+        @NotNull Object[] syncStart = new Object[n - 1];
+        for (int i = 0; i < syncStart.length; i++) {
+            syncStart[i] = new Object();
+        }
 
-            @NotNull LinkedList<LightFuture<?>> tasks = new LinkedList<>();
+        @NotNull Object[] syncFinish = new Object[n - 1];
+        for (int i = 0; i < syncFinish.length; i++) {
+            syncFinish[i] = new Object();
+        }
 
-            for (int i = 0; i < n - 1; i++) {
-                int j = i;
-                tasks.add(threadPool.assignTask(() -> {
-                    try {
-                        synchronized (sync[0]) {
-                            addId(threadIDs);
-                        }
-                        synchronized (sync[j]) {
-                            sync[j].wait();
-                        }
-                    } catch (InterruptedException ignored) {
-                    }
-                    return true;
-                }));
-            }
+        boolean[] isReady = new boolean[n - 1];
 
+        @NotNull LinkedList<LightFuture<?>> tasks = new LinkedList<>();
+
+        for (int i = 0; i < n - 1; i++) {
+            int j = i;
             tasks.add(threadPool.assignTask(() -> {
-                synchronized (sync[0]) {
-                    addId(threadIDs);
-                }
-                // shouldn't be replaced with foreach in order to make synchronization not on local variable
-                //noinspection ForLoopReplaceableByForEach
-                for (int i = 0; i < sync.length; i++) {
-                    synchronized (sync[i]) {
-                        sync[i].notify();
+                isReady[j] = true;
+                try {
+                    synchronized (syncStart[j]) {
+                        syncStart[j].notify();
                     }
+                    synchronized (syncFinish[0]) {
+                        addId(threadIDs);
+                    }
+                    synchronized (syncFinish[j]) {
+                        syncFinish[j].wait();
+                    }
+                } catch (InterruptedException ignored) {
                 }
                 return true;
             }));
-
-            for (@NotNull LightFuture<?> task : tasks) {
-                task.get();
-            }
-
-            assertThat(threadIDs, hasSize(greaterThanOrEqualTo(n)));
         }
+
+        tasks.add(threadPool.assignTask(() -> {
+            synchronized (syncFinish[0]) {
+                addId(threadIDs);
+            }
+            // shouldn't be replaced with foreach in order to make synchronization not on local variable
+            //noinspection ForLoopReplaceableByForEach
+            for (int i = 0; i < syncFinish.length; i++) {
+                while (!isReady[i]) {
+                    synchronized (syncStart[i]) {
+                        if (!isReady[i]) {
+                            try {
+                                syncStart[i].wait();
+                            } catch (InterruptedException ignored) {
+                            }
+                        }
+                    }
+                }
+
+                synchronized (syncFinish[i]) {
+                    syncFinish[i].notify();
+                }
+            }
+            return true;
+        }));
+
+        for (@NotNull LightFuture<?> task : tasks) {
+            task.get();
+        }
+
+        assertThat(threadIDs, hasSize(greaterThanOrEqualTo(n)));
     }
 
     private void addId(@NotNull HashSet<Long> threadIDs) {
