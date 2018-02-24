@@ -27,10 +27,9 @@ public class ThreadPoolImpl {
         threads = new Thread[threadsCount];
         for (int i = 0; i < threadsCount; i++) {
             threads[i] = new Thread(() -> {
-                LightFutureImpl<?> lightFuture;
                 try {
                     while (!Thread.interrupted()) {
-                        lightFuture = queue.take();
+                        LightFutureImpl<?> lightFuture = queue.take();
                         lightFuture.run();
                     }
                 } catch (InterruptedException e) {
