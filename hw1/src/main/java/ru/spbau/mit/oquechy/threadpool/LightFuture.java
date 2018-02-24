@@ -1,5 +1,7 @@
 package ru.spbau.mit.oquechy.threadpool;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.function.Function;
 
 /**
@@ -28,5 +30,6 @@ public interface LightFuture<T> {
      * @throws InterruptedException if waiting for the result to compute fails
      * @throws LightExecutionException if computation ends up with an exception
      */
+    @NotNull
     <U> LightFuture<U> thenApply(Function<T, U> mapping) throws InterruptedException, LightExecutionException;
 }

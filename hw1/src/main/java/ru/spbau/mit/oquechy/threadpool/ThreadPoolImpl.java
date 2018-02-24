@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 public class ThreadPoolImpl {
 
     @NotNull
-    private BlockingQueue<LightFutureImpl<?>> queue = new LinkedBlockingQueue<>();
+    private ConcurrentQueue<LightFutureImpl<?>> queue = new ConcurrentQueue<>();
     private Thread[] threads;
 
     /**

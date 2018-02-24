@@ -85,7 +85,7 @@ public class ThreadPoolImplTest {
             syncFinish[i] = new Object();
         }
 
-        boolean[] isReady = new boolean[n - 1];
+        @NotNull boolean[] isReady = new boolean[n - 1];
 
         @NotNull LinkedList<LightFuture<?>> tasks = new LinkedList<>();
 
