@@ -31,6 +31,7 @@ public class ConcurrentQueueTest {
     @Test
     public void take() throws InterruptedException {
         @NotNull ConcurrentQueue<Object> queue = new ConcurrentQueue<>();
+        Object sync = new Object();
 
         for (Object object : OBJECTS) {
             queue.add(object);
@@ -41,7 +42,10 @@ public class ConcurrentQueueTest {
         for (int i = 0; i < threads.length; i++) {
             threads[i] = new Thread(() -> {
                 try {
-                    taken.add(queue.take());
+                    Object object = queue.take();
+                    synchronized (sync) {
+                        taken.add(object);
+                    }
                 } catch (InterruptedException ignored) { }
             });
         }
