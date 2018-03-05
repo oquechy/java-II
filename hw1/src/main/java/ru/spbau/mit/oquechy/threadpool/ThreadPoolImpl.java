@@ -184,9 +184,17 @@ public class ThreadPoolImpl {
                 return lightFuture;
             }
 
-            @NotNull LightFutureImpl<V, T> lightFuture = new LightFutureImpl<>(mapping);
-            synchronized (syncAfterTasks) {
-                afterTasks.add(lightFuture);
+            @NotNull LightFutureImpl<V, T> lightFuture;
+            synchronized (syncSupplier) {
+                if (!isReady) {
+                    lightFuture = new LightFutureImpl<>(mapping);
+                    synchronized (syncAfterTasks) {
+                        afterTasks.add(lightFuture);
+                    }
+                } else {
+                    lightFuture = new LightFutureImpl<>(() -> mapping.apply(result));
+                    queue.add(lightFuture);
+                }
             }
             return lightFuture;
         }
