@@ -3,8 +3,8 @@ package ru.spbau.mit.oquechy.threadpool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 public class ThreadPoolImpl {
 
     @NotNull
-    private ConcurrentQueue<LightFutureImpl<?>> queue = new ConcurrentQueue<>();
+    private ConcurrentQueue<LightFutureImpl<?, ?>> queue = new ConcurrentQueue<>();
     private Thread[] threads;
 
     /**
@@ -29,7 +29,7 @@ public class ThreadPoolImpl {
             threads[i] = new Thread(() -> {
                 try {
                     while (!Thread.interrupted()) {
-                        LightFutureImpl<?> lightFuture = queue.take();
+                        LightFutureImpl<?, ?> lightFuture = queue.take();
                         lightFuture.run();
                     }
                 } catch (InterruptedException e) {
@@ -63,7 +63,7 @@ public class ThreadPoolImpl {
      */
     @NotNull
     public <T> LightFuture<T> assignTask(Supplier<T> supplier) {
-        @NotNull LightFutureImpl<T> lightFuture = new LightFutureImpl<>(supplier);
+        @NotNull LightFutureImpl<T, ?> lightFuture = new LightFutureImpl<>(supplier);
         queue.add(lightFuture);
         return lightFuture;
     }
@@ -71,15 +71,19 @@ public class ThreadPoolImpl {
     /**
      * Multi thread storage for supplier.
      * @param <T> return type of the supplier.
+     * @param <U> return type of previous task if applicable.
      */
-    private class LightFutureImpl<T> implements LightFuture<T> {
+    private class LightFutureImpl<T, U> implements LightFuture<T> {
         private T result;
         private volatile boolean isReady = false;
         @NotNull
-        private final Object sync = new Object();
+        private final Object syncSupplier = new Object();
+        private final Object syncAfterTasks = new Object();
         private Supplier<T> supplier;
+        private Function<U, T> function;
         @Nullable
         private volatile LightExecutionException exception = null;
+        private final Queue<LightFutureImpl<?, T>> afterTasks = new LinkedList<>();
 
         /**
          * Doesn't call supplier.
@@ -91,24 +95,41 @@ public class ThreadPoolImpl {
 
         /**
          * Runs computation. Notifies any threads waiting for result.
+         * Adds related tasks to thread pool.
          * @throws LightExecutionException if supplier throws an exception
          * while running
          */
         private void run() throws LightExecutionException {
             try {
-                synchronized (sync) {
+                synchronized (syncSupplier) {
                     result = supplier.get();
                     isReady = true;
-                    sync.notify();
+                    syncSupplier.notify();
                 }
             } catch (RuntimeException e) {
-                synchronized (sync) {
+                synchronized (syncSupplier) {
                     exception = new LightExecutionException(e);
-                    sync.notify();
+                    syncSupplier.notify();
                     // once became notnull forever notnull
                     throw exception;
                 }
             }
+
+            synchronized (syncAfterTasks) {
+                while (!afterTasks.isEmpty()) {
+                    LightFutureImpl<?, T> afterTask = afterTasks.remove();
+                    afterTask.initSupplier(result);
+                    queue.add(afterTask);
+                }
+            }
+        }
+
+        private void initSupplier(U result) {
+            supplier = () -> function.apply(result);
+        }
+
+        private LightFutureImpl(Function<U, T> mapping) {
+            function = mapping;
         }
 
         /**
@@ -135,9 +156,9 @@ public class ThreadPoolImpl {
                 return result;
             }
 
-            synchronized (sync) {
+            synchronized (syncSupplier) {
                 while (!isReady && exception == null) {
-                    sync.wait();
+                    syncSupplier.wait();
                 }
             }
 
@@ -151,16 +172,22 @@ public class ThreadPoolImpl {
 
         /**
          * Applies mapping to result of the supplier to get a new supplier.
-         * Uses {@code get} for waiting for the result. Adds new supplier
+         * Doesn't wait for the result. Adds new supplier
          * in to-do-list of this thread pool.
          */
         @NotNull
         @Override
-        public <U> LightFuture<U> thenApply(@NotNull Function<T, U> mapping)
-                throws InterruptedException, LightExecutionException {
-            T result = get();
-            @NotNull LightFutureImpl<U> lightFuture = new LightFutureImpl<>(() -> mapping.apply(result));
-            queue.add(lightFuture);
+        public <V> LightFuture<V> thenApply(@NotNull Function<T, V> mapping) {
+            if (isReady) {
+                @NotNull LightFutureImpl<V, T> lightFuture = new LightFutureImpl<>(() -> mapping.apply(result));
+                queue.add(lightFuture);
+                return lightFuture;
+            }
+
+            @NotNull LightFutureImpl<V, T> lightFuture = new LightFutureImpl<>(mapping);
+            synchronized (syncAfterTasks) {
+                afterTasks.add(lightFuture);
+            }
             return lightFuture;
         }
     }
