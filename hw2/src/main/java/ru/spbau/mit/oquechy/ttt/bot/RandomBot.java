@@ -20,6 +20,7 @@ public class RandomBot implements Bot {
 
         do {
             move = random.nextInt(SIZE);
+            if (model == null) System.err.println("model is null");
         } while (model.isBusy(move));
 
         return move;

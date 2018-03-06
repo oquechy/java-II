@@ -1,3 +1,7 @@
+.centered {
+    -fx-alignment: CENTER;
+}
+
 @font-face {
     -fx-font-family: 'Permanent Marker';
     src: url('fonts/PermanentMarker-Regular.ttf');

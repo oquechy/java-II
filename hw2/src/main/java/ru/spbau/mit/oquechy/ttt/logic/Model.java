@@ -7,6 +7,7 @@ public class Model {
     public final static int SIZE = 3;
 
     private Controller controller;
+    private int moveCounter = 0;
 
     public Model(Controller controller) {
         this.controller = controller;
@@ -17,7 +18,7 @@ public class Model {
         }
     }
 
-    public void checkMove(int i) {
+    public boolean checkMove(int i) {
         int y = i / SIZE;
         int x = i % SIZE;
         if (field[y][x] == Sign.N) {
@@ -25,8 +26,9 @@ public class Model {
             controller.writeSign(y, x, currentSign);
             checkWin();
             currentSign = currentSign.flip();
+            return true;
         } else {
-            controller.cellIsBusy();
+            return false;
         }
     }
 
@@ -110,4 +112,8 @@ public class Model {
     private Sign currentSign = Sign.X;
 
     private Sign[][] field = new Sign[SIZE][SIZE];
+
+    public int getMoveCounter() {
+        return ++moveCounter;
+    }
 }

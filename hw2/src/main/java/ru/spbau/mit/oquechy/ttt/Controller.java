@@ -1,10 +1,12 @@
 package ru.spbau.mit.oquechy.ttt;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import ru.spbau.mit.oquechy.ttt.bot.Bot;
@@ -13,13 +15,17 @@ import ru.spbau.mit.oquechy.ttt.bot.RandomBot;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
 import ru.spbau.mit.oquechy.ttt.logic.Sign;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class Controller {
+
     private enum ViewMode {
-        STATISTICS,
+        LOG,
         FIELD;
 
         public ViewMode flip() {
-            return this == STATISTICS ? FIELD : STATISTICS;
+            return this == LOG ? FIELD : LOG;
         }
     }
 
@@ -29,9 +35,7 @@ public class Controller {
     }
 
     @FXML
-    private Button statisticsButton;
-    @FXML
-    private ScrollPane scroll;
+    private Button logButton;
     @FXML
     private Label message;
     @FXML
@@ -41,19 +45,23 @@ public class Controller {
     @FXML
     private GridPane grid;
     @FXML
-    private TableColumn winner;
+    private TableColumn<MoveLogger.Log, String> sign;
     @FXML
-    private TableColumn moves;
+    private TableColumn<MoveLogger.Log, String> position;
     @FXML
-    private TableColumn date;
+    private TableColumn<MoveLogger.Log, String> time;
     @FXML
-    private TableView table;
+    private TableColumn<MoveLogger.Log, Integer> moves;
+    @FXML
+    private TableView<MoveLogger.Log> table;
 
     private Model model;
     private ViewMode mode = ViewMode.FIELD;
     private State state = State.INACTIVE;
     private Bot bot;
     private ToggleGroup botLevel;
+    private final ObservableList<MoveLogger.Log> log = FXCollections.observableArrayList();
+    private MoveLogger logger;
 
     public void initialize() {
         botLevel = new ToggleGroup();
@@ -64,6 +72,12 @@ public class Controller {
 
         setColumnsWidth();
 
+        table.setItems(log);
+        sign.setCellValueFactory(new PropertyValueFactory<>("sign"));
+        position.setCellValueFactory(new PropertyValueFactory<>("position"));
+        time.setCellValueFactory(new PropertyValueFactory<>("time"));
+        moves.setCellValueFactory(new PropertyValueFactory<>("moveNumber"));
+
         ObservableList<Node> children = grid.getChildren();
         for (int i = 0; i < children.size(); i++) {
             setCellActions(i, children.get(i));
@@ -73,23 +87,24 @@ public class Controller {
         // text-cursor appears when enter the grid without this line
         clearGrid();
 
-        setStatisticsActions();
+        setLogActions();
     }
 
     private void setColumnsWidth() {
-        winner.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
-        moves.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
-        date.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
+        sign.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+        position.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+        time.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+        moves.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
     }
 
-    private void setStatisticsActions() {
-        statisticsButton.setOnMouseClicked(event -> {
-            boolean needGrid = mode == ViewMode.STATISTICS;
+    private void setLogActions() {
+        logButton.setOnMouseClicked(event -> {
+            boolean needGrid = mode == ViewMode.LOG;
                 grid.setDisable(!needGrid);
                 grid.setVisible(needGrid);
-                scroll.setDisable(needGrid);
-                scroll.setVisible(!needGrid);
-                statisticsButton.setText(needGrid ? "Statistics" : "Field");
+                table.setDisable(needGrid);
+                table.setVisible(!needGrid);
+                logButton.setText(needGrid ? "Log" : "Field");
                 mode = mode.flip();
         });
     }
@@ -98,11 +113,10 @@ public class Controller {
         cell.getStyleClass().add("cell");
 
         cell.setOnMouseClicked(event -> {
-            if (state == State.ACTIVE) {
-                model.checkMove(i);
-                if (bot != null && state == State.ACTIVE) {
-                    model.checkMove(bot.newMove());
-                }
+            if (state == State.ACTIVE && model.checkMove(i)) {
+                moveApproved();
+            } else if (state == State.ACTIVE) {
+                cellIsBusy();
             } else {
                 welcome(false);
             }
@@ -122,11 +136,7 @@ public class Controller {
     }
 
     public void newGameOnePlayer(MouseEvent mouseEvent) {
-        clearGrid();
-
-        model = new Model(this);
-        state = State.ACTIVE;
-        message.setText("Cross begins.");
+        newGame();
 
         String id = ((RadioButton) botLevel.getSelectedToggle()).getId();
         bot = id.equals("easyBot") ? new RandomBot(model) : new BruteForceBot(model);
@@ -134,11 +144,16 @@ public class Controller {
 
     public void newGameTwoPlayers(MouseEvent mouseEvent) {
         bot = null;
+        newGame();
+    }
+
+    private void newGame() {
         clearGrid();
 
         model = new Model(this);
         state = State.ACTIVE;
         message.setText("Cross begins.");
+        logger = new MoveLogger(model);
     }
 
     private void clearGrid() {
@@ -155,7 +170,7 @@ public class Controller {
         message.setText((firstTime ? "Hello! " : "") + "Choose the game mode.");
     }
 
-    public void cellIsBusy() {
+    private void cellIsBusy() {
         message.setText("This cell is busy.");
     }
 
@@ -171,11 +186,19 @@ public class Controller {
             textField.setText("O");
         }
 
+        log.add(logger.getLog(sign, y, x));
         message.setText("");
+    }
+
+    private void moveApproved() {
+        if (bot != null && state == Controller.State.ACTIVE) {
+            model.checkMove(bot.newMove());
+        }
     }
 
     public void writeWinner(Sign sign) {
         state = State.INACTIVE;
         message.setText(sign == Sign.X ? "Cross won!" : sign == Sign.O ? "Nought won!" : "Draw!");
     }
+
 }
