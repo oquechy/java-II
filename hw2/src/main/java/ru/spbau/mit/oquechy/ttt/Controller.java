@@ -9,6 +9,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.spbau.mit.oquechy.ttt.bot.Bot;
 import ru.spbau.mit.oquechy.ttt.bot.BruteForceBot;
 import ru.spbau.mit.oquechy.ttt.bot.RandomBot;
@@ -18,12 +20,16 @@ import ru.spbau.mit.oquechy.ttt.logic.Sign;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Connections between logic and ui.
+ */
 public class Controller {
 
     private enum ViewMode {
         LOG,
         FIELD;
 
+        @NotNull
         public ViewMode flip() {
             return this == LOG ? FIELD : LOG;
         }
@@ -56,13 +62,19 @@ public class Controller {
     private TableView<MoveLogger.Log> table;
 
     private Model model;
+    @NotNull
     private ViewMode mode = ViewMode.FIELD;
+    @NotNull
     private State state = State.INACTIVE;
+    @Nullable
     private Bot bot;
     private ToggleGroup botLevel;
     private final ObservableList<MoveLogger.Log> log = FXCollections.observableArrayList();
     private MoveLogger logger;
 
+    /**
+     * Assigns actions to javaFX nodes.
+     */
     public void initialize() {
         botLevel = new ToggleGroup();
         easyBot.setToggleGroup(botLevel);
@@ -73,6 +85,7 @@ public class Controller {
         setColumnsWidth();
 
         table.setItems(log);
+        table.setSelectionModel(null);
         sign.setCellValueFactory(new PropertyValueFactory<>("sign"));
         position.setCellValueFactory(new PropertyValueFactory<>("position"));
         time.setCellValueFactory(new PropertyValueFactory<>("time"));
@@ -135,6 +148,9 @@ public class Controller {
         grid.setOnMouseExited(event -> grid.getScene().setCursor(Cursor.DEFAULT));
     }
 
+    /**
+     * Handler for choosing single player mode.
+     */
     public void newGameOnePlayer(MouseEvent mouseEvent) {
         newGame();
 
@@ -142,6 +158,9 @@ public class Controller {
         bot = id.equals("easyBot") ? new RandomBot(model) : new BruteForceBot(model);
     }
 
+    /**
+     * Handler for choosing multi player mode.
+     */
     public void newGameTwoPlayers(MouseEvent mouseEvent) {
         bot = null;
         newGame();
@@ -150,6 +169,7 @@ public class Controller {
     private void newGame() {
         clearGrid();
 
+        log.clear();
         model = new Model(this);
         state = State.ACTIVE;
         message.setText("Cross begins.");
@@ -174,8 +194,14 @@ public class Controller {
         message.setText("This cell is busy.");
     }
 
+    /**
+     * Puts sign on ui field.
+     * @param y first coordinate
+     * @param x second coordinate
+     * @param sign sign to be put
+     */
     public void writeSign(int y, int x, Sign sign) {
-        TextField textField = (TextField) grid.getChildren().get(y * Model.SIZE + x);
+        @NotNull TextField textField = (TextField) grid.getChildren().get(y * Model.SIZE + x);
         textField.getStyleClass().clear();
 
         if (sign == Sign.X) {
@@ -196,9 +222,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Puts the result of the round on screen.
+     * @param sign winner
+     */
     public void writeWinner(Sign sign) {
         state = State.INACTIVE;
         message.setText(sign == Sign.X ? "Cross won!" : sign == Sign.O ? "Nought won!" : "Draw!");
     }
-
 }

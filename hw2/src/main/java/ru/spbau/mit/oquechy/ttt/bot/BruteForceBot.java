@@ -1,11 +1,17 @@
 package ru.spbau.mit.oquechy.ttt.bot;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
 import ru.spbau.mit.oquechy.ttt.logic.Sign;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+/**
+ * Chooses new move for nought to reach the best result
+ * of all possible worst cases.
+ */
 public class BruteForceBot implements Bot {
     private final static int MOVES = Model.SIZE * Model.SIZE;
 
@@ -14,15 +20,25 @@ public class BruteForceBot implements Bot {
     private final static int DRAW = 0;
     private final static int WIN = 1;
 
+    @NotNull
     private Sign myType = Sign.O;
 
     private Model model;
+    @NotNull
     private Sign[][] field = new Sign[Model.SIZE][Model.SIZE];
 
+    /**
+     * Takes a model to ask it about current field state.
+     */
     public BruteForceBot(Model model) {
         this.model = model;
     }
 
+    /**
+     * Emulates all possible games and chooses move for
+     * the greatest result in worse case.
+     * @return new move
+     */
     @Override
     public int newMove() {
         copyField();
@@ -55,7 +71,7 @@ public class BruteForceBot implements Bot {
 
         doMove(move, myType);
 
-        Sign result = Model.getResult(field);
+        @Nullable Sign result = Model.getResult(field);
         if (result != null) {
             undoMove(move);
             return result == myType ? WIN : result == Sign.N ? DRAW : LOSS;

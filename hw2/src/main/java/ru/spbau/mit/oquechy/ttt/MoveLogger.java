@@ -2,12 +2,16 @@ package ru.spbau.mit.oquechy.ttt;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
+import org.jetbrains.annotations.NotNull;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
 import ru.spbau.mit.oquechy.ttt.logic.Sign;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Log table rows factory.
+ */
 public class MoveLogger {
 
     private Model model;
@@ -17,29 +21,17 @@ public class MoveLogger {
     }
 
     public static class Log {
+        @NotNull
         private final SimpleStringProperty sign;
+        @NotNull
         private final SimpleStringProperty position;
+        @NotNull
         private final SimpleStringProperty time;
+        @NotNull
         private final SimpleIntegerProperty moveNumber;
 
         public String getPosition() {
             return position.get();
-        }
-
-        public void setPosition(String position) {
-            this.position.set(position);
-        }
-
-        public void setSign(String sign) {
-            this.sign.set(sign);
-        }
-
-        public void setTime(String time) {
-            this.time.set(time);
-        }
-
-        public void setMoveNumber(int moveNumber) {
-            this.moveNumber.set(moveNumber);
         }
 
         public String getSign() {
@@ -62,9 +54,10 @@ public class MoveLogger {
         }
     }
 
-    public MoveLogger.Log getLog(Sign sign, int y, int x) {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
-        String position = "(" + x + ", " + y + ")";
+    @NotNull
+    public MoveLogger.Log getLog(@NotNull Sign sign, int y, int x) {
+        @NotNull SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        @NotNull String position = "(" + x + ", " + y + ")";
         return new MoveLogger.Log(sign, position, format.format(new Date()), model.getMoveCounter());
     }
 }
