@@ -29,7 +29,7 @@ class FTPTest {
     @BeforeEach
     public void setup() throws IOException, InterruptedException {
         server = FTPServer.start();
-        Thread.sleep(2000);
+        Thread.sleep(2000);            // waiting for server to init
     }
 
     @Test
@@ -143,6 +143,7 @@ class FTPTest {
         Thread.sleep(2000);
         assertThat(server.isAlive(), is(true));
 
+        // checking the socket to be closed by the server
         DataOutputStream finalOutputStream = outputStream;
         assertThrows(IOException.class, () -> finalOutputStream.writeInt(0));
     }

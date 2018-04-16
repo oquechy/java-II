@@ -4,13 +4,34 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Server for simple FTP operations:
+ *        - listing files from the server's directory
+ *        - fetching a file from the server
+ *
+ * Implemented with blocking socket, so it can only interact with
+ * the one client at a time.
+ */
 public class FTPServer {
 
+    /**
+     * Port which server listens to.
+     */
     public static final int PORT = 3030;
 
     private static final int BUF_SIZE = 4096;
     private static byte[] buffer = new byte[BUF_SIZE];
 
+    /**
+     * Reads from clients in the loop until interrupted.
+     * If the client ends his session, server starts to wait for a new client.
+     * If the client makes incorrect query, connection is closed and server
+     * also starts to wait for a new client.
+     *
+     * Arguments are ignored.
+     *
+     * @throws IOException when I/O fails
+     */
     public static void main(String[] args) throws IOException {
         ServerSocket server = new ServerSocket(PORT);
         System.out.println("Server is active");
@@ -80,6 +101,11 @@ public class FTPServer {
         }
     }
 
+    /**
+     * Starts separate process with server.
+     * @return {@link Process} instance
+     * @throws IOException when I/O fails
+     */
     public static Process start() throws IOException {
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + File.separator + "bin" + File.separator + "java";

@@ -9,6 +9,16 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Console app providing interactive mode of communication
+ * with {@link ru.spbau.mit.oquechy.ftp.server.FTPServer}
+ * via {@link FTPClient}
+ *
+ * Paths should be absolute and shouldn't contain quotes
+ *          ls dir_path        -- list remote directory
+ *          wget file_path     -- fetch remote file
+ *          q                  -- quit
+ */
 public class Main {
 
     public final static String USAGE =
@@ -19,6 +29,11 @@ public class Main {
             "\twget <file_path> \t-- fetch remote file\n" +
             "\tq \t\t\t\t\t-- quit\n";
 
+    /**
+     * Entry point
+     * @param args arg[0], the only argument, contains hostname
+     * @throws IOException when I/O fails
+     */
     public static void main(String[] args) throws IOException {
         System.out.println(USAGE);
         if (args.length != 1) {
