@@ -1,5 +1,8 @@
 package ru.spbau.mit.oquechy.ftp.types;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 
 public class FileInfo {
@@ -12,10 +15,10 @@ public class FileInfo {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FileInfo fileInfo = (FileInfo) o;
+        @NotNull FileInfo fileInfo = (FileInfo) o;
         return isDirectory == fileInfo.isDirectory &&
                 Objects.equals(name, fileInfo.name);
     }

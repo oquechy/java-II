@@ -1,12 +1,12 @@
 package ru.spbau.mit.oquechy.ftp.client;
 
+import com.google.common.io.ByteStreams;
+import org.jetbrains.annotations.NotNull;
 import ru.spbau.mit.oquechy.ftp.server.FTPServer;
 import ru.spbau.mit.oquechy.ftp.types.FileEntry;
 import ru.spbau.mit.oquechy.ftp.types.FileInfo;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +20,11 @@ import java.util.List;
  */
 public class FTPClient implements AutoCloseable {
 
+    @NotNull
     private final Socket socket;
+    @NotNull
     private final DataInputStream inputStream;
+    @NotNull
     private final DataOutputStream outputStream;
 
     /**
@@ -47,11 +50,12 @@ public class FTPClient implements AutoCloseable {
      * if the directory doesn't exist
      * @throws IOException when I/O fails
      */
-    public List<FileInfo> list(String path) throws IOException {
+    @NotNull
+    public List<FileInfo> list(@NotNull String path) throws IOException {
         outputStream.writeInt(1);
         outputStream.writeUTF(path);
 
-        ArrayList<FileInfo> files = new ArrayList<>();
+        @NotNull ArrayList<FileInfo> files = new ArrayList<>();
         int n = inputStream.readInt();
         for (int i = 0; i < n; i++) {
             files.add(new FileInfo(inputStream.readUTF(), inputStream.readBoolean()));
@@ -61,23 +65,31 @@ public class FTPClient implements AutoCloseable {
 
     /**
      * Asks the server to send a file at the specified path.
-     * @param path path to file
+     *
+     * @param src path to source file on server
+     * @param dst path to local destination file
      * @return fetched file or empty {@link FileEntry} if the file
      * doesn't exist
      * @throws IOException when I/O fails
      * @throws UnsupportedOperationException when promised size of file doesn't suit the real data
      */
-    public FileEntry get(String path) throws IOException {
+    public boolean get(@NotNull String src, @NotNull String dst) throws IOException {
         outputStream.writeInt(2);
-        outputStream.writeUTF(path);
+        outputStream.writeUTF(src);
 
-        FileEntry fileEntry = new FileEntry(inputStream.readInt());
-        for (int cur = inputStream.read(fileEntry.file), r; cur < fileEntry.file.length; cur += r) {
-            if ((r = inputStream.read(fileEntry.file, cur, fileEntry.size - cur)) < 0) {
-                throw new UnsupportedOperationException("Corrupted file");
-            }
+        int size = inputStream.readInt();
+        if (size == 0) {
+            return false;
         }
-        return fileEntry;
+
+        @NotNull FileOutputStream fileOutputStream = new FileOutputStream(dst);
+        long transferred = ByteStreams.limit(inputStream, size).transferTo(fileOutputStream);
+
+        if (transferred < size) {
+            throw new UnsupportedOperationException("Corrupted file");
+        }
+
+        return true;
     }
 
     @Override

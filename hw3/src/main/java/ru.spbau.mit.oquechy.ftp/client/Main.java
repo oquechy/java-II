@@ -1,5 +1,6 @@
 package ru.spbau.mit.oquechy.ftp.client;
 
+import org.jetbrains.annotations.NotNull;
 import ru.spbau.mit.oquechy.ftp.types.FileEntry;
 import ru.spbau.mit.oquechy.ftp.types.FileInfo;
 
@@ -14,20 +15,23 @@ import java.util.Scanner;
  * with {@link ru.spbau.mit.oquechy.ftp.server.FTPServer}
  * via {@link FTPClient}
  *
- * Paths should be absolute and shouldn't contain quotes
- *          ls dir_path        -- list remote directory
- *          wget file_path     -- fetch remote file
- *          q                  -- quit
+ * IMPORTANT: Paths must be absolute and mustn't contain quotes
+ *            Destination path can't contain nonexistent directories
+ *
+ *          ls dir_path               -- list remote directory
+ *          wget src_path dst_path    -- fetch file from server's path src_path
+ *                                       and save it to local path dst_path
+ *          q                         -- quit
  */
 public class Main {
 
-    public final static String USAGE =
+    private final static String USAGE =
             "Pass the address of running FTPServer as argument\n" +
             "\n" +
             "Commands in interactive mode:\n" +
-            "\tls <dir_path> \t\t-- list remote directory\n" +
-            "\twget <file_path> \t-- fetch remote file\n" +
-            "\tq \t\t\t\t\t-- quit\n";
+            "\t%-30s -- list remote directory\n" +
+            "\t%-30s -- fetch remote file and save it locally\n" +
+            "\t%-30s -- quit\n";
 
     /**
      * Entry point
@@ -35,13 +39,13 @@ public class Main {
      * @throws IOException when I/O fails
      */
     public static void main(String[] args) throws IOException {
-        System.out.println(USAGE);
+        usage();
         if (args.length != 1) {
             return;
         }
 
-        try (FTPClient client = FTPClient.start(args[0])) {
-            Scanner scanner = new Scanner(System.in);
+        try (@NotNull FTPClient client = FTPClient.start(args[0])) {
+            @NotNull Scanner scanner = new Scanner(System.in);
 
             while (true) {
                 String mode = scanner.next();
@@ -54,30 +58,35 @@ public class Main {
                         print(client.list(path));
                         break;
                     case "wget":
-                        String file = scanner.next();
-                        print(client.get(file));
+                        String src = scanner.next();
+                        String dst = scanner.next();
+                        print(client.get(src, dst), dst);
                         break;
                     default:
-                        System.out.println(USAGE);
+                        usage();
                 }
             }
         }
     }
 
-    private static void print(FileEntry fileEntry) {
-        if (fileEntry.size == 0) {
-            System.out.println("Directory, empty file or nonexistent file");
+    private static void usage() {
+        System.out.printf(USAGE, "ls <dir_path>", "wget <src_path> <dst_path>", "q");
+    }
+
+    private static void print(boolean success, String dst) {
+        if (success) {
+            System.out.println("Saved to " + dst);
             return;
         }
 
-        System.out.println(new String(fileEntry.file, Charset.defaultCharset()));
+        System.out.println("Directory, empty file or nonexistent file");
     }
 
     private static void print(List<FileInfo> list) {
         if (list.size() == 0) {
             System.out.println("Empty or nonexistent directory");
         }
-        for (FileInfo fileInfo : list) {
+        for (@NotNull FileInfo fileInfo : list) {
             System.out.println((fileInfo.isDirectory ? "\u001B[1;32m" : "") + fileInfo.name +
                     (fileInfo.isDirectory ? File.separator : "") + "\u001B[0m");
         }
