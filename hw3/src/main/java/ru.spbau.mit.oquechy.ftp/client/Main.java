@@ -1,94 +1,85 @@
 package ru.spbau.mit.oquechy.ftp.client;
 
-import org.jetbrains.annotations.NotNull;
-import ru.spbau.mit.oquechy.ftp.types.FileEntry;
-import ru.spbau.mit.oquechy.ftp.types.FileInfo;
-
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Scanner;
 
-/**
- * Console app providing interactive mode of communication
- * with {@link ru.spbau.mit.oquechy.ftp.server.FTPServer}
- * via {@link FTPClient}
- *
- * IMPORTANT: Paths must be absolute and mustn't contain quotes
- *            Destination path can't contain nonexistent directories
- *
- *          ls dir_path               -- list remote directory
- *          wget src_path dst_path    -- fetch file from server's path src_path
- *                                       and save it to local path dst_path
- *          q                         -- quit
- */
-public class Main {
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
-    private final static String USAGE =
-            "Pass the address of running FTPServer as argument\n" +
-            "\n" +
-            "Commands in interactive mode:\n" +
-            "\t%-30s -- list remote directory\n" +
-            "\t%-30s -- fetch remote file and save it locally\n" +
-            "\t%-30s -- quit\n";
+public class Main extends Application {
+    public static void main(String[] args) {
+        launch(args);
+    }
+    private TreeItem<File> createNode(final File f) {
+        return new TreeItem<File>(f) {
+            private boolean isLeaf;
+            private boolean isFirstTimeChildren = true;
+            private boolean isFirstTimeLeaf = true;
 
-    /**
-     * Entry point
-     * @param args arg[0], the only argument, contains hostname
-     * @throws IOException when I/O fails
-     */
-    public static void main(String[] args) throws IOException {
-        usage();
-        if (args.length != 1) {
-            return;
-        }
-
-        try (@NotNull FTPClient client = FTPClient.start(args[0])) {
-            @NotNull Scanner scanner = new Scanner(System.in);
-
-            while (true) {
-                String mode = scanner.next();
-
-                switch (mode) {
-                    case "q":
-                        return;
-                    case "ls":
-                        String path = scanner.next();
-                        print(client.list(path));
-                        break;
-                    case "wget":
-                        String src = scanner.next();
-                        String dst = scanner.next();
-                        print(client.get(src, dst), dst);
-                        break;
-                    default:
-                        usage();
+            @Override public ObservableList<TreeItem<File>> getChildren() {
+                if (isFirstTimeChildren) {
+                    isFirstTimeChildren = false;
+                    super.getChildren().setAll(buildChildren(this));
                 }
+                return super.getChildren();
             }
-        }
+
+            @Override public boolean isLeaf() {
+                if (isFirstTimeLeaf) {
+                    isFirstTimeLeaf = false;
+                    File f = (File) getValue();
+                    isLeaf = f.isFile();
+                }
+
+                return isLeaf;
+            }
+
+            private ObservableList<TreeItem<File>> buildChildren(TreeItem<File> TreeItem) {
+                File f = TreeItem.getValue();
+                if (f != null && f.isDirectory()) {
+                    File[] files = f.listFiles();
+                    if (files != null) {
+                        ObservableList<TreeItem<File>> children = FXCollections.observableArrayList();
+
+                        for (File childFile : files) {
+                            children.add(createNode(childFile));
+                        }
+
+                        return children;
+                    }
+                }
+
+                return FXCollections.emptyObservableList();
+            }
+        };
     }
+    @Override
+    public void start(Stage stage) {
+        Scene scene = new Scene(new Group());
+        stage.setTitle("Sample");
+        stage.setWidth(300);
+        stage.setHeight(190);
 
-    private static void usage() {
-        System.out.printf(USAGE, "ls <dir_path>", "wget <src_path> <dst_path>", "q");
-    }
+        VBox vbox = new VBox();
+        vbox.setLayoutX(20);
+        vbox.setLayoutY(20);
 
-    private static void print(boolean success, String dst) {
-        if (success) {
-            System.out.println("Saved to " + dst);
-            return;
-        }
+        TreeItem<File> root = createNode(new File("/"));
+        TreeView treeView = new TreeView<File>(root);
 
-        System.out.println("Directory, empty file or nonexistent file");
-    }
 
-    private static void print(List<FileInfo> list) {
-        if (list.size() == 0) {
-            System.out.println("Empty or nonexistent directory");
-        }
-        for (@NotNull FileInfo fileInfo : list) {
-            System.out.println((fileInfo.isDirectory ? "\u001B[1;32m" : "") + fileInfo.name +
-                    (fileInfo.isDirectory ? File.separator : "") + "\u001B[0m");
-        }
+
+        vbox.getChildren().add(treeView);
+        vbox.setSpacing(10);
+        ((Group) scene.getRoot()).getChildren().add(vbox);
+
+        stage.setScene(scene);
+        stage.show();
     }
 }
