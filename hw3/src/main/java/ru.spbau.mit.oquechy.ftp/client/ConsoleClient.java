@@ -1,12 +1,10 @@
 package ru.spbau.mit.oquechy.ftp.client;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.mit.oquechy.ftp.types.FileEntry;
 import ru.spbau.mit.oquechy.ftp.types.FileInfo;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Scanner;
 
@@ -14,27 +12,28 @@ import java.util.Scanner;
  * Console app providing interactive mode of communication
  * with {@link ru.spbau.mit.oquechy.ftp.server.FTPServer}
  * via {@link FTPClient}
- *
+ * <p>
  * IMPORTANT: Paths must be absolute and mustn't contain quotes
- *            Destination path can't contain nonexistent directories
- *
- *          ls dir_path               -- list remote directory
- *          wget src_path dst_path    -- fetch file from server's path src_path
- *                                       and save it to local path dst_path
- *          q                         -- quit
+ * Destination path can't contain nonexistent directories
+ * <p>
+ * ls dir_path               -- list remote directory
+ * wget src_path dst_path    -- fetch file from server's path src_path
+ * and save it to local path dst_path
+ * q                         -- quit
  */
 public class ConsoleClient {
 
     private final static String USAGE =
             "Pass the address of running FTPServer as argument\n" +
-            "\n" +
-            "Commands in interactive mode:\n" +
-            "\t%-30s -- list remote directory\n" +
-            "\t%-30s -- fetch remote file and save it locally\n" +
-            "\t%-30s -- quit\n";
+                    "\n" +
+                    "Commands in interactive mode:\n" +
+                    "\t%-30s -- list remote directory\n" +
+                    "\t%-30s -- fetch remote file and save it locally\n" +
+                    "\t%-30s -- quit\n";
 
     /**
      * Entry point
+     *
      * @param args arg[0], the only argument, contains hostname
      * @throws IOException when I/O fails
      */
@@ -87,8 +86,8 @@ public class ConsoleClient {
             System.out.println("Empty or nonexistent directory");
         }
         for (@NotNull FileInfo fileInfo : list) {
-            System.out.println((fileInfo.isDirectory ? "\u001B[1;32m" : "") + fileInfo.name +
-                    (fileInfo.isDirectory ? File.separator : "") + "\u001B[0m");
+            System.out.println((fileInfo.isDirectory() ? "\u001B[1;32m" : "") + fileInfo.getName() +
+                    (fileInfo.isDirectory() ? File.separator : "") + "\u001B[0m");
         }
     }
 }

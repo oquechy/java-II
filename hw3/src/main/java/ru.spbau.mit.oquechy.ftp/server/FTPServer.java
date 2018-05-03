@@ -9,11 +9,11 @@ import java.net.Socket;
 
 /**
  * Server for simple FTP operations:
- *        - listing files from the server's directory
- *        - fetching a file from the server
- *
- * Implemented with blocking socket, so it can only interact with
- * the one client at a time.
+ * - listing files from the server's directory
+ * - fetching a file from the server
+ * <p>
+ * Implemented with blocking socket. Can interact with
+ * several clients at a time.
  */
 public class FTPServer {
 
@@ -27,51 +27,72 @@ public class FTPServer {
     private static byte[] buffer = new byte[BUF_SIZE];
 
     /**
-     * Reads from clients in the loop until interrupted.
-     * If the client ends his session, server starts to wait for a new client.
-     * If the client makes incorrect query, connection is closed and server
-     * also starts to wait for a new client.
-     *
+     * Runs the server as a main program.
      * Arguments are ignored.
-     *
-     * @throws IOException when I/O fails
      */
-    public static void main(String[] args) throws IOException {
-        @NotNull ServerSocket server = new ServerSocket(PORT);
-        System.out.println("Server is active");
-        while (!Thread.interrupted()) {
-            Socket socket = server.accept();
-            System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
-            try (@NotNull DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-                 @NotNull DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())) {
-                int query;
-                do {
-                    query = inputStream.readInt();
-                    String path;
-                    switch (query) {
-                        case 1:
-                            System.out.print("Listing");
-                            path = inputStream.readUTF();
-                            System.out.println(" " + path);
-                            putList(path, outputStream);
-                            break;
-                        case 2:
-                            System.out.print("Sending");
-                            path = inputStream.readUTF();
-                            System.out.println(" " + path);
-                            putFile(path, outputStream);
-                            break;
-                        default:
-                            socket.close();
-                            System.out.println("Incorrect query: " + query + ". Connection closed");
-                    }
-                } while (query == 1 || query == 2);
-            } catch (IOException e) {
-                socket.close();
-                System.out.println("Connection closed");
-            }
+    public static void main(String[] args) {
+        run();
+    }
+
+    /**
+     * Reads from clients in the loop until interrupted.
+     * Starts a new {@link Thread} for each client.
+     * If the client makes an incorrect query, connection is closed and server
+     * starts to wait for a new client.
+     */
+    public static void run() {
+        @NotNull ServerSocket server;
+        try {
+            server = new ServerSocket(PORT);
+        } catch (IOException e) {
+            System.out.println("Failed to open the socket. Exiting...");
+            return;
         }
 
+        System.out.println("Server is active");
+        while (!Thread.interrupted()) {
+            Socket socket;
+            try {
+                socket = server.accept();
+            } catch (IOException e) {
+                System.out.println("Failed to accept the connection. Exiting...");
+                return;
+            }
+            System.out.println("Connected to " + socket.getInetAddress() + ":" + socket.getPort());
+            new Thread(() -> {
+                try (@NotNull DataInputStream inputStream = new DataInputStream(socket.getInputStream());
+                     @NotNull DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())) {
+                    int query;
+                    do {
+                        query = inputStream.readInt();
+                        String path;
+                        switch (query) {
+                            case 1:
+                                System.out.print("Listing");
+                                path = inputStream.readUTF();
+                                System.out.println(" " + path);
+                                putList(path, outputStream);
+                                break;
+                            case 2:
+                                System.out.print("Sending");
+                                path = inputStream.readUTF();
+                                System.out.println(" " + path);
+                                putFile(path, outputStream);
+                                break;
+                            default:
+                                socket.close();
+                                System.out.println("Incorrect query: " + query + ". Connection closed");
+                        }
+                    } while (query == 1 || query == 2);
+                } catch (IOException e) {
+                    try {
+                        socket.close();
+                    } catch (IOException ignored) {
+                    }
+                    System.out.println("Connection closed");
+                }
+            }).start();
+        }
         System.out.println("Server was stopped");
     }
 
@@ -109,6 +130,7 @@ public class FTPServer {
 
     /**
      * Starts separate process with server.
+     *
      * @return {@link Process} instance
      * @throws IOException when I/O fails
      */

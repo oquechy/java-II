@@ -1,4 +1,4 @@
-package ru.spbau.mit.oquechy.ftp.client;
+package ru.spbau.mit.oquechy.ftp.client.gui;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -7,14 +7,32 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
+/**
+ * Graphic application connects to server by hostname,
+ * shows the file structure on server and allows to download
+ * files from server.
+ *
+ * Server's structure is dynamically obtained from the server.
+ * Each directory is queried once. List of children doesn't update
+ * during one session.
+ */
 public class GUIClient extends Application {
 
+    /**
+     * Launches the application.
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
+    /**
+     * Opens the window and builds the scene.
+     *
+     * @param primaryStage window
+     * @throws Exception if uploading of FXML fails
+     */
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("GUIClient.fxml"));
         primaryStage.setTitle("Getty");
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
@@ -23,6 +41,9 @@ public class GUIClient extends Application {
         primaryStage.show();
     }
 
+    /**
+     * Closes connection when application is stopped.
+     */
     @Override
     public void stop() {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("GUIClient.fxml"));

@@ -1,35 +1,36 @@
 package ru.spbau.mit.oquechy.ftp.types;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import java.util.Objects;
-
+/**
+ * Data class used by {@link ru.spbau.mit.oquechy.ftp.client.FTPClient}
+ * for representing server's responds.
+ */
+@EqualsAndHashCode
 public class FileInfo {
-    public String name;
-    public boolean isDirectory;
+    @Getter
+    private String name;
 
+    @Getter
+    private boolean isDirectory;
+
+    /**
+     * Initializes fields.
+     *
+     * @param name file name
+     * @param isDirectory true if file is a directory
+     */
     public FileInfo(String name, boolean isDirectory) {
         this.name = name;
         this.isDirectory = isDirectory;
     }
 
+    /**
+     * Gives string representation of file name.
+     */
     @Override
     public String toString() {
         return name;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        @NotNull FileInfo fileInfo = (FileInfo) o;
-        return isDirectory == fileInfo.isDirectory &&
-                Objects.equals(name, fileInfo.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, isDirectory);
     }
 }
