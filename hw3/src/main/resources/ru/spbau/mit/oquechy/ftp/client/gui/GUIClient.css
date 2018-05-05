@@ -1,0 +1,17 @@
+@font-face {
+    src: url('FasterOne-Regular.ttf');
+}
+
+.button {
+    -fx-min-height: 80px;
+    -fx-min-width: 80px;
+    -fx-background-image: url('button.png');
+    -fx-background-size: 43px 59px;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+}
+
+.icon {
+    -fx-font-family: 'Faster One';
+    -fx-font-size: 30px;
+}
