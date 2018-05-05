@@ -1,7 +1,7 @@
 language: java
 
 jdk:
-  - oraclejdk8
+  - oraclejdk9
 
 os:
   - linux
@@ -15,4 +15,3 @@ before_script:
 script: 
   - chmod +x build.sh
   - bash build.sh
-

@@ -1,10 +1,11 @@
 #! /bin/bash
 
-find . -maxdepth 1 -mindepth 1 -type d | while read -r hw ; do
-    if [[ "$hw" == ./hw* ]] ; then
-        echo "$hw"
-        cd "$hw" || { echo "cd failed" ; exit 1 ; } 
-        gradle check || { echo "check failed" ; exit 1 ; }
+# while read loop suddenly breaks beeing used instead of for :(
+# can anyone explain me why?
+for hw in $(find . -maxdepth 1 -mindepth 1 -type d) ; do
+    if [ -f "$hw/build.gradle" ] ; then
+        echo "processing $hw"
+        cd "$hw" && ./gradlew check -i && cd .. || { echo "check failed" ; exit 1 ; }
+        echo "finishing $hw"
     fi
 done
-
