@@ -20,6 +20,13 @@ public class MoveLogger {
         this.model = model;
     }
 
+    @NotNull
+    public MoveLogger.Log getLog(@NotNull Sign sign, int y, int x) {
+        @NotNull SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        @NotNull String position = "(" + x + ", " + y + ")";
+        return new MoveLogger.Log(sign, position, format.format(new Date()), model.getMoveCounter());
+    }
+
     public static class Log {
         @NotNull
         private final SimpleStringProperty sign;
@@ -29,6 +36,13 @@ public class MoveLogger {
         private final SimpleStringProperty time;
         @NotNull
         private final SimpleIntegerProperty moveNumber;
+
+        private Log(Sign sign, String position, String time, int moveNumber) {
+            this.sign = new SimpleStringProperty(sign.name());
+            this.position = new SimpleStringProperty(position);
+            this.time = new SimpleStringProperty(time);
+            this.moveNumber = new SimpleIntegerProperty(moveNumber);
+        }
 
         public String getPosition() {
             return position.get();
@@ -45,19 +59,5 @@ public class MoveLogger {
         public int getMoveNumber() {
             return moveNumber.get();
         }
-
-        private Log(Sign sign, String position, String time, int moveNumber) {
-            this.sign = new SimpleStringProperty(sign.name());
-            this.position = new SimpleStringProperty(position);
-            this.time = new SimpleStringProperty(time);
-            this.moveNumber = new SimpleIntegerProperty(moveNumber);
-        }
-    }
-
-    @NotNull
-    public MoveLogger.Log getLog(@NotNull Sign sign, int y, int x) {
-        @NotNull SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
-        @NotNull String position = "(" + x + ", " + y + ")";
-        return new MoveLogger.Log(sign, position, format.format(new Date()), model.getMoveCounter());
     }
 }

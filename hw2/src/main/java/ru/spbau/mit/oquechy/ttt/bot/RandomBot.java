@@ -11,9 +11,9 @@ import java.util.Random;
  * generates random moves until suitable one is found.
  */
 public class RandomBot implements Bot {
-    private final static int SIZE = Model.ROW * Model.ROW;
 
     private Model model;
+    private @NotNull Random random = new Random();
 
     /**
      * Takes a model to ask it about current field state.
@@ -28,7 +28,6 @@ public class RandomBot implements Bot {
     @Override
     public Position newMove() {
         Position move;
-        @NotNull Random random = new Random();
 
         do {
             move = new Position(random.nextInt(Model.ROW), random.nextInt(Model.ROW));

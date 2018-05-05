@@ -2,7 +2,6 @@ package ru.spbau.mit.oquechy.ttt.logic;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.spbau.mit.oquechy.ttt.Controller;
 
 /**
  * Game logic
@@ -14,15 +13,16 @@ public class Model {
      */
     public final static int ROW = 3;
 
-    private Controller controller;
     private int moveCounter = 0;
+    @NotNull
+    private Sign currentSign = Sign.X;
+    @NotNull
+    private Sign[][] field = new Sign[ROW][ROW];
 
     /**
      * Creates empty field for a new game
-     * @param controller of the application
      */
-    public Model(Controller controller) {
-        this.controller = controller;
+    public Model() {
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < ROW; j++) {
                 field[i][j] = Sign.N;
@@ -31,38 +31,8 @@ public class Model {
     }
 
     /**
-     * Verifies new move got from user or bot.
-     * If move is correct, asks controller to draw it
-     * and runs check for end of game.
-     * @param position index of new move from [0..8]
-     * @return {@code true} if move is correct and
-     * {@code false} otherwise
-     */
-    public boolean checkMove(Position position) {
-        int row = position.getX();
-        int col = position.getY();
-        if (field[row][col] == Sign.N) {
-            field[row][col] = currentSign;
-            controller.writeSign(row, col, currentSign);
-            checkWin();
-            currentSign = currentSign.flip();
-            moveCounter++;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private void checkWin() {
-        @Nullable Sign result = getResult(field);
-
-        if (result != null) {
-            controller.writeWinner(result);
-        }
-    }
-
-    /**
      * Checks for end of game on a given field.
+     *
      * @param field filed to be checked
      * @return {@code Sign} of the winner or null
      * if game is still continue
@@ -129,7 +99,42 @@ public class Model {
     }
 
     /**
+     * Verifies new move got from user or bot.
+     * If move is correct, asks controller to draw it
+     * and runs check for end of game.
+     *
+     * @param position index of new move from [0..8]
+     * @return {@code true} if move is correct and
+     * {@code false} otherwise
+     */
+    public boolean checkAndSetMove(Position position) {
+        int row = position.getX();
+        int col = position.getY();
+        if (field[row][col] == Sign.N) {
+            field[row][col] = currentSign;
+            currentSign = currentSign.flip();
+            moveCounter++;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean checkWin() {
+        @Nullable Sign result = getResult(field);
+        return result != null;
+    }
+
+    /**
+     * Returns the winner or null if game wasn't finished.
+     */
+    public Sign getResult() {
+        return getResult(field);
+    }
+
+    /**
      * Checks whether the given cell is filled with X or O.
+     *
      * @param position index of the cell from [0..8]
      * @return {@code true} if cell is busy
      * and {@code false} otherwise
@@ -140,6 +145,7 @@ public class Model {
 
     /**
      * Returns current sign of specified field position.
+     *
      * @param y first coordinate
      * @param x second coordinate
      */
@@ -147,11 +153,14 @@ public class Model {
         return field[y][x];
     }
 
-    @NotNull
-    private Sign currentSign = Sign.X;
-
-    @NotNull
-    private Sign[][] field = new Sign[ROW][ROW];
+    /**
+     * Returns current sign of specified field position.
+     *
+     * @param position requested position
+     */
+    public Sign getSign(Position position) {
+        return getSign(position.getX(), position.getY());
+    }
 
     /**
      * Returns total number of moves in the round.

@@ -3,35 +3,22 @@ package ru.spbau.mit.oquechy.ttt.logic;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import ru.spbau.mit.oquechy.ttt.Controller;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.Mockito.*;
-import static ru.spbau.mit.oquechy.ttt.logic.Sign.N;
-import static ru.spbau.mit.oquechy.ttt.logic.Sign.O;
-import static ru.spbau.mit.oquechy.ttt.logic.Sign.X;
+import static ru.spbau.mit.oquechy.ttt.logic.Sign.*;
 
 class ModelTest {
-
-    @Mock private Controller controller;
-    private Model model;
-
     private final static Sign[][] EMPTY = {
             {N, N, N},
             {N, N, N},
             {N, N, N}
     };
+    private Model model;
 
     @BeforeEach
     void setup() {
-        MockitoAnnotations.initMocks(this);
-        model = new Model(controller);
+        model = new Model();
     }
 
     @Test
@@ -43,7 +30,7 @@ class ModelTest {
     //   .X. -> .X. -> .?. -> .X. -> .X.
     //   ...    ...    ...    ...    .X.
     @Test
-    void checkMove() {
+    void checkAndSetMove() {
 
         @NotNull Sign[][] expectedF1 = {
                 {N, N, N},
@@ -69,22 +56,16 @@ class ModelTest {
                 new Position(2, 1)
         };
 
-        model.checkMove(positions[0]);
+        assertThat(model.checkAndSetMove(positions[0]), equalTo(true));
         assertFieldEqualsTo(expectedF1);
-        model.checkMove(positions[1]);
+        assertThat(model.checkAndSetMove(positions[1]), equalTo(true));
         assertFieldEqualsTo(expectedF2);
-        model.checkMove(positions[2]);
+        assertThat(model.checkAndSetMove(positions[2]), equalTo(false));
         assertFieldEqualsTo(expectedF2);
-        model.checkMove(positions[3]);
+        assertThat(model.checkAndSetMove(positions[3]), equalTo(false));
         assertFieldEqualsTo(expectedF2);
-        model.checkMove(positions[4]);
+        model.checkAndSetMove(positions[4]);
         assertFieldEqualsTo(expectedF3);
-
-        InOrder order = inOrder(controller);
-        order.verify(controller).writeSign(1, 1, X);
-        order.verify(controller).writeSign(0, 0, O);
-        order.verify(controller).writeSign(2, 1, X);
-        verifyNoMoreInteractions(controller);
     }
 
     //   ...    O..    O.X    O.X    O.X    O.X
@@ -98,22 +79,19 @@ class ModelTest {
                 new Position(2, 1), new Position(2, 0)
         };
 
-        model.checkMove(positions[0]);
-        model.checkMove(positions[1]);
-        model.checkMove(positions[2]);
-        model.checkMove(positions[3]);
-        model.checkMove(positions[4]);
-        model.checkMove(positions[5]);
-
-        InOrder order = inOrder(controller);
-        order.verify(controller).writeSign(1, 1, X);
-        order.verify(controller).writeSign(0, 0, O);
-        order.verify(controller).writeSign(0, 2, X);
-        order.verify(controller).writeSign(1, 0, O);
-        order.verify(controller).writeSign(2, 1, X);
-        order.verify(controller).writeSign(2, 0, O);
-        order.verify(controller).writeWinner(O);
-        verifyNoMoreInteractions(controller);
+        assertThat(model.checkWin(), is(false));
+        model.checkAndSetMove(positions[0]);
+        assertThat(model.checkWin(), is(false));
+        model.checkAndSetMove(positions[1]);
+        assertThat(model.checkWin(), is(false));
+        model.checkAndSetMove(positions[2]);
+        assertThat(model.checkWin(), is(false));
+        model.checkAndSetMove(positions[3]);
+        assertThat(model.checkWin(), is(false));
+        model.checkAndSetMove(positions[4]);
+        assertThat(model.checkWin(), is(false));
+        model.checkAndSetMove(positions[5]);
+        assertThat(model.checkWin(), is(true));
     }
 
     @Test
@@ -156,8 +134,8 @@ class ModelTest {
                 new Position(2, 2)
         };
 
-        model.checkMove(positions[0]);
-        model.checkMove(positions[1]);
+        model.checkAndSetMove(positions[0]);
+        model.checkAndSetMove(positions[1]);
 
         assertThat(model.isBusy(positions[2]), is(true));
         assertThat(model.isBusy(positions[3]), is(false));
@@ -180,13 +158,13 @@ class ModelTest {
         };
 
 
-        model.checkMove(positions[0]);
-        model.checkMove(positions[1]);
-        model.checkMove(positions[2]);
-        model.checkMove(positions[3]);
-        model.checkMove(positions[4]);
-        model.checkMove(positions[5]);
-        model.checkMove(positions[6]);
+        model.checkAndSetMove(positions[0]);
+        model.checkAndSetMove(positions[1]);
+        model.checkAndSetMove(positions[2]);
+        model.checkAndSetMove(positions[3]);
+        model.checkAndSetMove(positions[4]);
+        model.checkAndSetMove(positions[5]);
+        model.checkAndSetMove(positions[6]);
 
         for (int i = 0; i < Model.ROW; i++) {
             for (int j = 0; j < Model.ROW; j++) {
@@ -205,19 +183,19 @@ class ModelTest {
         };
 
         assertThat(model.getMoveCounter(), is(0));
-        model.checkMove(positions[0]);
+        model.checkAndSetMove(positions[0]);
         assertThat(model.getMoveCounter(), is(1));
-        model.checkMove(positions[1]);
+        model.checkAndSetMove(positions[1]);
         assertThat(model.getMoveCounter(), is(2));
-        model.checkMove(positions[2]);
+        model.checkAndSetMove(positions[2]);
         assertThat(model.getMoveCounter(), is(3));
-        model.checkMove(positions[3]);
+        model.checkAndSetMove(positions[3]);
         assertThat(model.getMoveCounter(), is(4));
-        model.checkMove(positions[4]);
+        model.checkAndSetMove(positions[4]);
         assertThat(model.getMoveCounter(), is(4));
-        model.checkMove(positions[5]);
+        model.checkAndSetMove(positions[5]);
         assertThat(model.getMoveCounter(), is(4));
-        model.checkMove(positions[6]);
+        model.checkAndSetMove(positions[6]);
         assertThat(model.getMoveCounter(), is(5));
     }
 

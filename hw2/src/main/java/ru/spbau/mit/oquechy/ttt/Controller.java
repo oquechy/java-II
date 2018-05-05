@@ -7,7 +7,6 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,21 +22,7 @@ import ru.spbau.mit.oquechy.ttt.logic.Sign;
  */
 public class Controller {
 
-    private enum ViewMode {
-        LOG,
-        FIELD;
-
-        @NotNull
-        public ViewMode flip() {
-            return this == LOG ? FIELD : LOG;
-        }
-    }
-
-    private enum State {
-        ACTIVE,
-        INACTIVE
-    }
-
+    private final ObservableList<MoveLogger.Log> log = FXCollections.observableArrayList();
     @FXML
     private Button logButton;
     @FXML
@@ -58,7 +43,6 @@ public class Controller {
     private TableColumn<MoveLogger.Log, Integer> moves;
     @FXML
     private TableView<MoveLogger.Log> table;
-
     private Model model;
     @NotNull
     private ViewMode mode = ViewMode.FIELD;
@@ -67,7 +51,6 @@ public class Controller {
     @Nullable
     private Bot bot;
     private ToggleGroup botLevel;
-    private final ObservableList<MoveLogger.Log> log = FXCollections.observableArrayList();
     private MoveLogger logger;
 
     /**
@@ -111,12 +94,12 @@ public class Controller {
     private void setLogActions() {
         logButton.setOnMouseClicked(event -> {
             boolean needGrid = mode == ViewMode.LOG;
-                grid.setDisable(!needGrid);
-                grid.setVisible(needGrid);
-                table.setDisable(needGrid);
-                table.setVisible(!needGrid);
-                logButton.setText(needGrid ? "Log" : "Field");
-                mode = mode.flip();
+            grid.setDisable(!needGrid);
+            grid.setVisible(needGrid);
+            table.setDisable(needGrid);
+            table.setVisible(!needGrid);
+            logButton.setText(needGrid ? "Log" : "Field");
+            mode = mode.flip();
         });
     }
 
@@ -124,8 +107,8 @@ public class Controller {
         cell.getStyleClass().add("cell");
 
         cell.setOnMouseClicked(event -> {
-            if (state == State.ACTIVE && model.checkMove(position)) {
-                moveApproved();
+            if (state == State.ACTIVE && model.checkAndSetMove(position)) {
+                moveApproved(position);
             } else if (state == State.ACTIVE) {
                 cellIsBusy();
             } else {
@@ -149,7 +132,7 @@ public class Controller {
     /**
      * Handler for choosing single player mode.
      */
-    public void newGameOnePlayer(MouseEvent mouseEvent) {
+    public void newGameOnePlayer() {
         newGame();
 
         String id = ((RadioButton) botLevel.getSelectedToggle()).getId();
@@ -159,7 +142,7 @@ public class Controller {
     /**
      * Handler for choosing multi player mode.
      */
-    public void newGameTwoPlayers(MouseEvent mouseEvent) {
+    public void newGameTwoPlayers() {
         bot = null;
         newGame();
     }
@@ -168,7 +151,7 @@ public class Controller {
         clearGrid();
 
         log.clear();
-        model = new Model(this);
+        model = new Model();
         state = State.ACTIVE;
         message.setText("Cross begins.");
         logger = new MoveLogger(model);
@@ -194,11 +177,12 @@ public class Controller {
 
     /**
      * Puts sign on ui field.
-     * @param y first coordinate
-     * @param x second coordinate
+     *
+     * @param y    first coordinate
+     * @param x    second coordinate
      * @param sign sign to be put
      */
-    public void writeSign(int y, int x, Sign sign) {
+    private void writeSign(int y, int x, Sign sign) {
         @NotNull TextField textField = (TextField) grid.getChildren().get(y * Model.ROW + x);
         textField.getStyleClass().clear();
 
@@ -214,18 +198,44 @@ public class Controller {
         message.setText("");
     }
 
-    private void moveApproved() {
+    private void moveApproved(Position position) {
+        writeSign(position.getX(), position.getY(), model.getSign(position));
+        if (model.checkWin()) {
+            writeWinner(model.getResult());
+            return;
+        }
         if (bot != null && state == Controller.State.ACTIVE) {
-            model.checkMove(bot.newMove());
+            position = bot.newMove();
+            model.checkAndSetMove(position);
+            writeSign(position.getX(), position.getY(), model.getSign(position));
+            if (model.checkWin()) {
+                writeWinner(model.getResult());
+            }
         }
     }
 
     /**
      * Puts the result of the round on screen.
+     *
      * @param sign winner
      */
-    public void writeWinner(Sign sign) {
+    private void writeWinner(Sign sign) {
         state = State.INACTIVE;
         message.setText(sign == Sign.X ? "Cross won!" : sign == Sign.O ? "Nought won!" : "Draw!");
+    }
+
+    private enum ViewMode {
+        LOG,
+        FIELD;
+
+        @NotNull
+        public ViewMode flip() {
+            return this == LOG ? FIELD : LOG;
+        }
+    }
+
+    private enum State {
+        ACTIVE,
+        INACTIVE
     }
 }
