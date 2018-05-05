@@ -12,8 +12,8 @@ import java.util.Random;
  */
 public class RandomBot implements Bot {
 
-    private Model model;
-    private @NotNull Random random = new Random();
+    final private Model model;
+    final private @NotNull Random random = new Random();
 
     /**
      * Takes a model to ask it about current field state.

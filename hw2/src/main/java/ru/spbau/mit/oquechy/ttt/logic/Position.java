@@ -1,7 +1,6 @@
 package ru.spbau.mit.oquechy.ttt.logic;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Data class for storing cell coordinates.

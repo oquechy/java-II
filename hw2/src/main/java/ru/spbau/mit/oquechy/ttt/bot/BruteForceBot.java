@@ -24,9 +24,9 @@ public class BruteForceBot implements Bot {
     @NotNull
     private Sign myType = Sign.O;
 
-    private Model model;
+    final private Model model;
     @NotNull
-    private Sign[][] field = new Sign[Model.ROW][Model.ROW];
+    final private Sign[][] field = new Sign[Model.ROW][Model.ROW];
 
     /**
      * Takes a model to ask it about current field state.
@@ -40,6 +40,7 @@ public class BruteForceBot implements Bot {
      * the greatest result in worse case.
      * @return new move
      */
+    @NotNull
     @Override
     public Position newMove() {
         copyField();
@@ -48,7 +49,7 @@ public class BruteForceBot implements Bot {
         int move = 0;
 
         for (int i = 0; i < MOVES; i++) {
-            Position position = new Position(i / Model.ROW, i % Model.ROW);
+            @NotNull Position position = new Position(i / Model.ROW, i % Model.ROW);
             int p = getPriority(position);
             if (p > movePriority) {
                 movePriority = p;
@@ -67,7 +68,7 @@ public class BruteForceBot implements Bot {
         }
     }
 
-    private int getPriority(Position position) {
+    private int getPriority(@NotNull Position position) {
         if (isIncorrectMove(position)) {
             return INCORRECT;
         }
@@ -83,7 +84,7 @@ public class BruteForceBot implements Bot {
         int worstMovePriority = WIN;                     // choosing a move to have the best result
         for (int i = 0; i < MOVES; i++) {                // for all possible opponent's moves
 
-            Position move = new Position(i / Model.ROW, i % Model.ROW);
+            @NotNull Position move = new Position(i / Model.ROW, i % Model.ROW);
 
             if (isIncorrectMove(move)) {
                 continue;
@@ -99,7 +100,7 @@ public class BruteForceBot implements Bot {
             } else {                                                      // in case opponent's move is last
                 int bestMovePriority = LOSS;
                 for (int j = 0; j < MOVES; j++) {
-                    Position p = new Position(j / Model.ROW, j % Model.ROW);
+                    @NotNull Position p = new Position(j / Model.ROW, j % Model.ROW);
                     int priority = getPriority(p);
                     bestMovePriority = max(bestMovePriority, priority);
                 }
@@ -128,7 +129,7 @@ public class BruteForceBot implements Bot {
         field[move.getX()][move.getY()] = sign;
     }
 
-    private boolean isBusy(Position move) {
+    private boolean isBusy(@NotNull Position move) {
         return model.isBusy(move) || field[move.getX()][move.getY()] != Sign.N;
     }
 }

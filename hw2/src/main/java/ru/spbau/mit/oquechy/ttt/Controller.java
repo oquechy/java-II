@@ -5,8 +5,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,12 +17,18 @@ import ru.spbau.mit.oquechy.ttt.logic.Model;
 import ru.spbau.mit.oquechy.ttt.logic.Position;
 import ru.spbau.mit.oquechy.ttt.logic.Sign;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 /**
  * Connections between logic and ui.
  */
 public class Controller {
 
-    private final ObservableList<MoveLogger.Log> log = FXCollections.observableArrayList();
+    @FXML
+    private PieChart pieChart;
     @FXML
     private Button logButton;
     @FXML
@@ -33,25 +39,22 @@ public class Controller {
     private RadioButton easyBot;
     @FXML
     private GridPane grid;
-    @FXML
-    private TableColumn<MoveLogger.Log, String> sign;
-    @FXML
-    private TableColumn<MoveLogger.Log, String> position;
-    @FXML
-    private TableColumn<MoveLogger.Log, String> time;
-    @FXML
-    private TableColumn<MoveLogger.Log, Integer> moves;
-    @FXML
-    private TableView<MoveLogger.Log> table;
+
     private Model model;
+
     @NotNull
     private ViewMode mode = ViewMode.FIELD;
+
     @NotNull
     private State state = State.INACTIVE;
+
     @Nullable
     private Bot bot;
+
     private ToggleGroup botLevel;
-    private MoveLogger logger;
+    private long oCount;
+    private long drawCount;
+    private long xCount;
 
     /**
      * Assigns actions to javaFX nodes.
@@ -60,17 +63,8 @@ public class Controller {
         botLevel = new ToggleGroup();
         easyBot.setToggleGroup(botLevel);
         hardBot.setToggleGroup(botLevel);
-
+        uploadStatistics();
         welcome(true);
-
-        setColumnsWidth();
-
-        table.setItems(log);
-        table.setSelectionModel(null);
-        sign.setCellValueFactory(new PropertyValueFactory<>("sign"));
-        position.setCellValueFactory(new PropertyValueFactory<>("position"));
-        time.setCellValueFactory(new PropertyValueFactory<>("time"));
-        moves.setCellValueFactory(new PropertyValueFactory<>("moveNumber"));
 
         ObservableList<Node> children = grid.getChildren();
         for (int i = 0, n = Model.ROW * Model.ROW; i < n; i++) {
@@ -84,11 +78,21 @@ public class Controller {
         setLogActions();
     }
 
-    private void setColumnsWidth() {
-        sign.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
-        position.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
-        time.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
-        moves.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+    private void uploadStatistics() {
+        try (@NotNull DataInputStream statistics = new DataInputStream(getClass().getResourceAsStream("/ttt.db"))) {
+            xCount = statistics.readLong();
+            oCount = statistics.readLong();
+            drawCount = statistics.readLong();
+            pieChart.setData(FXCollections.observableArrayList(
+                    new PieChart.Data("X " + xCount, xCount),
+                    new PieChart.Data("O " + oCount, oCount),
+                    new PieChart.Data("Draw " + drawCount, drawCount)
+            ));
+        } catch (IOException e) {
+            xCount = oCount = drawCount = 0;
+            pieChart.setData(FXCollections.emptyObservableList());
+            pieChart.setTitle("No statistics");
+        }
     }
 
     private void setLogActions() {
@@ -96,14 +100,14 @@ public class Controller {
             boolean needGrid = mode == ViewMode.LOG;
             grid.setDisable(!needGrid);
             grid.setVisible(needGrid);
-            table.setDisable(needGrid);
-            table.setVisible(!needGrid);
+            pieChart.setDisable(needGrid);
+            pieChart.setVisible(!needGrid);
             logButton.setText(needGrid ? "Log" : "Field");
             mode = mode.flip();
         });
     }
 
-    private void setCellActions(Position position, Node cell) {
+    private void setCellActions(@NotNull Position position, Node cell) {
         cell.getStyleClass().add("cell");
 
         cell.setOnMouseClicked(event -> {
@@ -150,11 +154,9 @@ public class Controller {
     private void newGame() {
         clearGrid();
 
-        log.clear();
         model = new Model();
         state = State.ACTIVE;
         message.setText("Cross begins.");
-        logger = new MoveLogger(model);
     }
 
     private void clearGrid() {
@@ -194,7 +196,6 @@ public class Controller {
             textField.setText("O");
         }
 
-        log.add(logger.getLog(sign, y, x));
         message.setText("");
     }
 
@@ -222,6 +223,27 @@ public class Controller {
     private void writeWinner(Sign sign) {
         state = State.INACTIVE;
         message.setText(sign == Sign.X ? "Cross won!" : sign == Sign.O ? "Nought won!" : "Draw!");
+        updateStatistics(sign);
+    }
+
+    private void updateStatistics(Sign sign) {
+        xCount += sign == Sign.X ? 1 : 0;
+        oCount += sign == Sign.O ? 1 : 0;
+        drawCount += sign == Sign.N ? 1 : 0;
+
+        try (@NotNull FileOutputStream out = new FileOutputStream(getClass().getResource("/ttt.db").getPath());
+             @NotNull DataOutputStream statistics = new DataOutputStream(out)) {
+            statistics.writeLong(xCount);
+            statistics.writeLong(oCount);
+            statistics.writeLong(drawCount);
+        } catch (IOException e) {
+            pieChart.setTitle("No statistics");
+        }
+        pieChart.setData(FXCollections.observableArrayList(
+                new PieChart.Data("X " + xCount, xCount),
+                new PieChart.Data("O " + oCount, oCount),
+                new PieChart.Data("Draw " + drawCount, drawCount)
+        ));
     }
 
     private enum ViewMode {

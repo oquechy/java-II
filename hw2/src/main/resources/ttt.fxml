@@ -1,28 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.RadioButton?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-
-<ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-            xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+<?import javafx.geometry.*?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308"
+            maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.121"
             fx:controller="ru.spbau.mit.oquechy.ttt.Controller">
     <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity"
                 minWidth="-Infinity" prefHeight="400.0" prefWidth="540.0">
         <padding>
-          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
         </padding>
         <left>
             <VBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
@@ -49,17 +37,17 @@
                 <BorderPane.margin>
                     <Insets/>
                 </BorderPane.margin>
-                <Button fx:id="logButton" alignment="CENTER" contentDisplay="CENTER"
-                        maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Log"/>
+                <Button fx:id="logButton" alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308"
+                        mnemonicParsing="false" text="Log"/>
             </VBox>
         </right>
         <top>
-          <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                prefHeight="10.0" prefWidth="200.0" BorderPane.alignment="CENTER"/>
+            <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+                  prefHeight="10.0" prefWidth="200.0" BorderPane.alignment="CENTER"/>
         </top>
         <bottom>
-          <Label fx:id="message" alignment="CENTER" contentDisplay="CENTER" prefHeight="50.0" prefWidth="210.0"
-                 textAlignment="RIGHT" textOverrun="CLIP" BorderPane.alignment="CENTER"/>
+            <Label fx:id="message" alignment="CENTER" contentDisplay="CENTER" prefHeight="50.0" prefWidth="210.0"
+                   textAlignment="RIGHT" textOverrun="CLIP" BorderPane.alignment="CENTER"/>
         </bottom>
         <center>
             <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="300.0"
@@ -67,19 +55,7 @@
                 <BorderPane.margin>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                 </BorderPane.margin>
-                <TableView fx:id="table" disable="true" editable="true" maxHeight="1.7976931348623157E308"
-                           maxWidth="1.7976931348623157E308" stylesheets="@ttt.css" visible="false">
-                    <columns>
-                        <TableColumn fx:id="sign" maxWidth="1.7976931348623157E308" prefWidth="-1.0"
-                                     sortable="false" styleClass="centered" text="Player"/>
-                        <TableColumn fx:id="position" maxWidth="1.7976931348623157E308" prefWidth="-1.0"
-                                     styleClass="centered" text="Position"/>
-                        <TableColumn fx:id="time" maxWidth="1.7976931348623157E308" prefWidth="-1.0"
-                                     styleClass="centered" text="Time"/>
-                        <TableColumn fx:id="moves" maxWidth="1.7976931348623157E308" prefWidth="-1.0"
-                                     sortType="DESCENDING" styleClass="centered" text="№"/>
-                    </columns>
-                </TableView>
+                <PieChart fx:id="pieChart" title="Game statistics" visible="false"/>
                 <GridPane fx:id="grid" alignment="CENTER" gridLinesVisible="true" minHeight="-Infinity"
                           minWidth="-Infinity" prefHeight="300.0" prefWidth="300.0" BorderPane.alignment="CENTER">
                     <columnConstraints>

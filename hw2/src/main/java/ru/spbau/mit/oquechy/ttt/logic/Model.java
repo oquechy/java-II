@@ -17,7 +17,7 @@ public class Model {
     @NotNull
     private Sign currentSign = Sign.X;
     @NotNull
-    private Sign[][] field = new Sign[ROW][ROW];
+    final private Sign[][] field = new Sign[ROW][ROW];
 
     /**
      * Creates empty field for a new game
@@ -107,7 +107,7 @@ public class Model {
      * @return {@code true} if move is correct and
      * {@code false} otherwise
      */
-    public boolean checkAndSetMove(Position position) {
+    public boolean checkAndSetMove(@NotNull Position position) {
         int row = position.getX();
         int col = position.getY();
         if (field[row][col] == Sign.N) {
@@ -128,6 +128,7 @@ public class Model {
     /**
      * Returns the winner or null if game wasn't finished.
      */
+    @Nullable
     public Sign getResult() {
         return getResult(field);
     }
@@ -139,7 +140,7 @@ public class Model {
      * @return {@code true} if cell is busy
      * and {@code false} otherwise
      */
-    public boolean isBusy(Position position) {
+    public boolean isBusy(@NotNull Position position) {
         return field[position.getX()][position.getY()] != Sign.N;
     }
 
@@ -158,7 +159,7 @@ public class Model {
      *
      * @param position requested position
      */
-    public Sign getSign(Position position) {
+    public Sign getSign(@NotNull Position position) {
         return getSign(position.getX(), position.getY());
     }
 

@@ -50,7 +50,7 @@ class ModelTest {
                 {N, X, N}
         };
 
-        Position[] positions = {
+        @NotNull Position[] positions = {
                 new Position(1, 1), new Position(0, 0),
                 new Position(1, 1), new Position(0, 0),
                 new Position(2, 1)
@@ -73,7 +73,7 @@ class ModelTest {
     //   ...    ...    ...    ...    .X.    OX.
     @Test
     void checkWin() {
-        Position[] positions = {
+        @NotNull Position[] positions = {
                 new Position(1, 1), new Position(0, 0),
                 new Position(0, 2), new Position(1, 0),
                 new Position(2, 1), new Position(2, 0)
@@ -128,7 +128,7 @@ class ModelTest {
 
     @Test
     void isBusy() {
-        Position[] positions = {
+        @NotNull Position[] positions = {
                 new Position(0, 0), new Position(2, 2),
                 new Position(0, 0), new Position(1, 1),
                 new Position(2, 2)
@@ -150,7 +150,7 @@ class ModelTest {
                 {N, O, X}
         };
 
-        Position[] positions = {
+        @NotNull Position[] positions = {
                 new Position(0, 0), new Position(0, 1),
                 new Position(0, 2), new Position(1, 2),
                 new Position(1, 1), new Position(2, 1),
@@ -175,7 +175,7 @@ class ModelTest {
 
     @Test
     void getMoveCounter() {
-        Position[] positions = {
+        @NotNull Position[] positions = {
                 new Position(0, 0), new Position(0, 1),
                 new Position(0, 2), new Position(1, 0),
                 new Position(1, 0), new Position(0, 2),

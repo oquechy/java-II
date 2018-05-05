@@ -3,7 +3,6 @@ package ru.spbau.mit.oquechy.ttt.bot;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
-import org.mockito.MockitoAnnotations;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
 import ru.spbau.mit.oquechy.ttt.logic.Position;
 
@@ -20,7 +19,6 @@ class BotTest {
 
     @BeforeEach
     void setup() {
-        MockitoAnnotations.initMocks(this);
         model = new Model();
         bots = new Bot[]{new RandomBot(model), new BruteForceBot(model)};
     }
@@ -34,11 +32,11 @@ class BotTest {
 
     private void testGame(@NotNull Bot bot) {
         InputStream resourceAsStream = getClass().getResourceAsStream("test.txt");
-        Scanner scanner = new Scanner(resourceAsStream);
+        @NotNull Scanner scanner = new Scanner(resourceAsStream);
         while (model.getResult() == null) {
             int x = scanner.nextInt();
             int y = scanner.nextInt();
-            Position position = new Position(x, y);
+            @NotNull Position position = new Position(x, y);
 
             if (model.isBusy(position)) {
                 continue;
