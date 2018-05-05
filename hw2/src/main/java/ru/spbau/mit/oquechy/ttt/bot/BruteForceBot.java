@@ -3,6 +3,7 @@ package ru.spbau.mit.oquechy.ttt.bot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
+import ru.spbau.mit.oquechy.ttt.logic.Position;
 import ru.spbau.mit.oquechy.ttt.logic.Sign;
 
 import static java.lang.Math.max;
@@ -13,7 +14,7 @@ import static java.lang.Math.min;
  * of all possible worst cases.
  */
 public class BruteForceBot implements Bot {
-    private final static int MOVES = Model.SIZE * Model.SIZE;
+    private final static int MOVES = Model.ROW * Model.ROW;
 
     private final static int INCORRECT = -2;
     private final static int LOSS = -1;
@@ -25,7 +26,7 @@ public class BruteForceBot implements Bot {
 
     private Model model;
     @NotNull
-    private Sign[][] field = new Sign[Model.SIZE][Model.SIZE];
+    private Sign[][] field = new Sign[Model.ROW][Model.ROW];
 
     /**
      * Takes a model to ask it about current field state.
@@ -40,89 +41,94 @@ public class BruteForceBot implements Bot {
      * @return new move
      */
     @Override
-    public int newMove() {
+    public Position newMove() {
         copyField();
 
         int movePriority = INCORRECT;
         int move = 0;
 
-        for (int i = 0, p = getPriority(i); i < MOVES; i++, p = getPriority(i)) {
+        for (int i = 0; i < MOVES; i++) {
+            Position position = new Position(i / Model.ROW, i % Model.ROW);
+            int p = getPriority(position);
             if (p > movePriority) {
                 movePriority = p;
                 move = i;
             }
         }
 
-        return move;
+        return new Position(move / Model.ROW, move % Model.ROW);
     }
 
     private void copyField() {
-        for (int i = 0; i < Model.SIZE; i++) {
-            for (int j = 0; j < Model.SIZE; j++) {
+        for (int i = 0; i < Model.ROW; i++) {
+            for (int j = 0; j < Model.ROW; j++) {
                 field[i][j] = model.getSign(i, j);
             }
         }
     }
 
-    private int getPriority(int move) {
-        if (isIncorrectMove(move)) {
+    private int getPriority(Position position) {
+        if (isIncorrectMove(position)) {
             return INCORRECT;
         }
 
-        doMove(move, myType);
+        doMove(position, myType);
 
         @Nullable Sign result = Model.getResult(field);
         if (result != null) {
-            undoMove(move);
+            undoMove(position);
             return result == myType ? WIN : result == Sign.N ? DRAW : LOSS;
         }
 
         int worstMovePriority = WIN;                     // choosing a move to have the best result
         for (int i = 0; i < MOVES; i++) {                // for all possible opponent's moves
 
-            if (isIncorrectMove(i)) {
+            Position move = new Position(i / Model.ROW, i % Model.ROW);
+
+            if (isIncorrectMove(move)) {
                 continue;
             }
 
-            doMove(i, myType.flip());
+            doMove(move, myType.flip());
             result = Model.getResult(field);
 
             if (result != null) {
-                undoMove(i);
+                undoMove(move);
                 int p = result == myType ? WIN : result == Sign.N ? DRAW : LOSS;
                 worstMovePriority = min(worstMovePriority, p);            // updating lower bound
             } else {                                                      // in case opponent's move is last
                 int bestMovePriority = LOSS;
                 for (int j = 0; j < MOVES; j++) {
-                    int p = getPriority(j);
-                    bestMovePriority = max(bestMovePriority, p);
+                    Position p = new Position(j / Model.ROW, j % Model.ROW);
+                    int priority = getPriority(p);
+                    bestMovePriority = max(bestMovePriority, priority);
                 }
 
-                undoMove(i);
+                undoMove(move);
                 worstMovePriority = min(worstMovePriority, bestMovePriority); // updating lower bound
             }                                                                 // with best strategy
         }
 
-        undoMove(move);
+        undoMove(position);
 
         return worstMovePriority;
     }
 
-    private boolean isIncorrectMove(int move) {
-        return !(0 <= move && move < MOVES && !isBusy(move));
+    private boolean isIncorrectMove(Position move) {
+        return !(move.onField() && !isBusy(move));
     }
 
-    private void undoMove(int move) {
-        if (0 <= move && move < MOVES) {
-            field[move / Model.SIZE][move % Model.SIZE] = Sign.N;
+    private void undoMove(Position move) {
+        if (move.onField()) {
+            field[move.getX()][move.getY()] = Sign.N;
         }
     }
 
-    private void doMove(int move, Sign sign) {
-        field[move / Model.SIZE][move % Model.SIZE] = sign;
+    private void doMove(Position move, Sign sign) {
+        field[move.getX()][move.getY()] = sign;
     }
 
-    private boolean isBusy(int move) {
-        return model.isBusy(move) || field[move / Model.SIZE][move % Model.SIZE] != Sign.N;
+    private boolean isBusy(Position move) {
+        return model.isBusy(move) || field[move.getX()][move.getY()] != Sign.N;
     }
 }

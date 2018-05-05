@@ -15,10 +15,8 @@ import ru.spbau.mit.oquechy.ttt.bot.Bot;
 import ru.spbau.mit.oquechy.ttt.bot.BruteForceBot;
 import ru.spbau.mit.oquechy.ttt.bot.RandomBot;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
+import ru.spbau.mit.oquechy.ttt.logic.Position;
 import ru.spbau.mit.oquechy.ttt.logic.Sign;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Connections between logic and ui.
@@ -92,8 +90,8 @@ public class Controller {
         moves.setCellValueFactory(new PropertyValueFactory<>("moveNumber"));
 
         ObservableList<Node> children = grid.getChildren();
-        for (int i = 0; i < children.size(); i++) {
-            setCellActions(i, children.get(i));
+        for (int i = 0, n = Model.ROW * Model.ROW; i < n; i++) {
+            setCellActions(new Position(i / Model.ROW, i % Model.ROW), children.get(i));
         }
 
         setGridActions();
@@ -122,11 +120,11 @@ public class Controller {
         });
     }
 
-    private void setCellActions(int i, Node cell) {
+    private void setCellActions(Position position, Node cell) {
         cell.getStyleClass().add("cell");
 
         cell.setOnMouseClicked(event -> {
-            if (state == State.ACTIVE && model.checkMove(i)) {
+            if (state == State.ACTIVE && model.checkMove(position)) {
                 moveApproved();
             } else if (state == State.ACTIVE) {
                 cellIsBusy();
@@ -201,7 +199,7 @@ public class Controller {
      * @param sign sign to be put
      */
     public void writeSign(int y, int x, Sign sign) {
-        @NotNull TextField textField = (TextField) grid.getChildren().get(y * Model.SIZE + x);
+        @NotNull TextField textField = (TextField) grid.getChildren().get(y * Model.ROW + x);
         textField.getStyleClass().clear();
 
         if (sign == Sign.X) {

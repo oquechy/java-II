@@ -2,11 +2,16 @@ package ru.spbau.mit.oquechy.ttt.bot;
 
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
+import ru.spbau.mit.oquechy.ttt.logic.Position;
 
 import java.util.Random;
 
+/**
+ * Implementation of {@link Bot} interface, which
+ * generates random moves until suitable one is found.
+ */
 public class RandomBot implements Bot {
-    private final static int SIZE = Model.SIZE * Model.SIZE;
+    private final static int SIZE = Model.ROW * Model.ROW;
 
     private Model model;
 
@@ -21,12 +26,12 @@ public class RandomBot implements Bot {
      * Returns the first possible move of random generated.
      */
     @Override
-    public int newMove() {
-        int move;
+    public Position newMove() {
+        Position move;
         @NotNull Random random = new Random();
 
         do {
-            move = random.nextInt(SIZE);
+            move = new Position(random.nextInt(Model.ROW), random.nextInt(Model.ROW));
         } while (model.isBusy(move));
 
         return move;

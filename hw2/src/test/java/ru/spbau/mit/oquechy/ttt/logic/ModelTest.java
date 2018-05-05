@@ -63,15 +63,21 @@ class ModelTest {
                 {N, X, N}
         };
 
-        model.checkMove(4);
+        Position[] positions = {
+                new Position(1, 1), new Position(0, 0),
+                new Position(1, 1), new Position(0, 0),
+                new Position(2, 1)
+        };
+
+        model.checkMove(positions[0]);
         assertFieldEqualsTo(expectedF1);
-        model.checkMove(0);
+        model.checkMove(positions[1]);
         assertFieldEqualsTo(expectedF2);
-        model.checkMove(4);
+        model.checkMove(positions[2]);
         assertFieldEqualsTo(expectedF2);
-        model.checkMove(0);
+        model.checkMove(positions[3]);
         assertFieldEqualsTo(expectedF2);
-        model.checkMove(7);
+        model.checkMove(positions[4]);
         assertFieldEqualsTo(expectedF3);
 
         InOrder order = inOrder(controller);
@@ -86,12 +92,18 @@ class ModelTest {
     //   ...    ...    ...    ...    .X.    OX.
     @Test
     void checkWin() {
-        model.checkMove(4);
-        model.checkMove(0);
-        model.checkMove(2);
-        model.checkMove(3);
-        model.checkMove(7);
-        model.checkMove(6);
+        Position[] positions = {
+                new Position(1, 1), new Position(0, 0),
+                new Position(0, 2), new Position(1, 0),
+                new Position(2, 1), new Position(2, 0)
+        };
+
+        model.checkMove(positions[0]);
+        model.checkMove(positions[1]);
+        model.checkMove(positions[2]);
+        model.checkMove(positions[3]);
+        model.checkMove(positions[4]);
+        model.checkMove(positions[5]);
 
         InOrder order = inOrder(controller);
         order.verify(controller).writeSign(1, 1, X);
@@ -138,12 +150,18 @@ class ModelTest {
 
     @Test
     void isBusy() {
-        model.checkMove(0);
-        model.checkMove(8);
+        Position[] positions = {
+                new Position(0, 0), new Position(2, 2),
+                new Position(0, 0), new Position(1, 1),
+                new Position(2, 2)
+        };
 
-        assertThat(model.isBusy(0), is(true));
-        assertThat(model.isBusy(4), is(false));
-        assertThat(model.isBusy(8), is(true));
+        model.checkMove(positions[0]);
+        model.checkMove(positions[1]);
+
+        assertThat(model.isBusy(positions[2]), is(true));
+        assertThat(model.isBusy(positions[3]), is(false));
+        assertThat(model.isBusy(positions[4]), is(true));
     }
 
     @Test
@@ -154,16 +172,24 @@ class ModelTest {
                 {N, O, X}
         };
 
-        model.checkMove(0);
-        model.checkMove(1);
-        model.checkMove(2);
-        model.checkMove(5);
-        model.checkMove(4);
-        model.checkMove(7);
-        model.checkMove(8);
+        Position[] positions = {
+                new Position(0, 0), new Position(0, 1),
+                new Position(0, 2), new Position(1, 2),
+                new Position(1, 1), new Position(2, 1),
+                new Position(2, 2)
+        };
 
-        for (int i = 0; i < Model.SIZE; i++) {
-            for (int j = 0; j < Model.SIZE; j++) {
+
+        model.checkMove(positions[0]);
+        model.checkMove(positions[1]);
+        model.checkMove(positions[2]);
+        model.checkMove(positions[3]);
+        model.checkMove(positions[4]);
+        model.checkMove(positions[5]);
+        model.checkMove(positions[6]);
+
+        for (int i = 0; i < Model.ROW; i++) {
+            for (int j = 0; j < Model.ROW; j++) {
                 assertThat(model.getSign(i, j), equalTo(field[i][j]));
             }
         }
@@ -171,26 +197,33 @@ class ModelTest {
 
     @Test
     void getMoveCounter() {
+        Position[] positions = {
+                new Position(0, 0), new Position(0, 1),
+                new Position(0, 2), new Position(1, 0),
+                new Position(1, 0), new Position(0, 2),
+                new Position(1, 1)
+        };
+
         assertThat(model.getMoveCounter(), is(0));
-        model.checkMove(0);
+        model.checkMove(positions[0]);
         assertThat(model.getMoveCounter(), is(1));
-        model.checkMove(1);
+        model.checkMove(positions[1]);
         assertThat(model.getMoveCounter(), is(2));
-        model.checkMove(2);
+        model.checkMove(positions[2]);
         assertThat(model.getMoveCounter(), is(3));
-        model.checkMove(3);
+        model.checkMove(positions[3]);
         assertThat(model.getMoveCounter(), is(4));
-        model.checkMove(3);
+        model.checkMove(positions[4]);
         assertThat(model.getMoveCounter(), is(4));
-        model.checkMove(2);
+        model.checkMove(positions[5]);
         assertThat(model.getMoveCounter(), is(4));
-        model.checkMove(4);
+        model.checkMove(positions[6]);
         assertThat(model.getMoveCounter(), is(5));
     }
 
     private void assertFieldEqualsTo(Sign[][] expectedF) {
-        for (int i = 0; i < Model.SIZE; i++) {
-            for (int j = 0; j < Model.SIZE; j++) {
+        for (int i = 0; i < Model.ROW; i++) {
+            for (int j = 0; j < Model.ROW; j++) {
                 assertThat(model.getSign(i, j), is(expectedF[i][j]));
             }
         }

@@ -21,6 +21,8 @@ public class Main extends Application {
     @Override
     public void start(@NotNull Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("/ttt.fxml"));
+        primaryStage.setMinHeight(300);
+        primaryStage.setMinWidth(300);
         primaryStage.setTitle("Tic-Tac-Toe");
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon.png")));
         @NotNull Scene scene = new Scene(root);

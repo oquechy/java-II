@@ -1,5 +1,6 @@
 package ru.spbau.mit.oquechy.ttt.bot;
 
+import org.apache.commons.math3.util.MathArrays;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import ru.spbau.mit.oquechy.ttt.Controller;
 import ru.spbau.mit.oquechy.ttt.logic.Model;
+import ru.spbau.mit.oquechy.ttt.logic.Position;
 
 import java.util.Random;
 
@@ -46,15 +48,15 @@ class BotTest {
         doAnswer(invocation -> endOfGame = true).when(controller).writeWinner(any());
 
         while (!endOfGame){
-            int i = random.nextInt(9);
+            Position position = new Position(random.nextInt(Model.ROW), random.nextInt(Model.ROW));
 
-            if (model.isBusy(i)) {
+            if (model.isBusy(position)) {
                 continue;
             }
-            model.checkMove(i);
+            model.checkMove(position);
 
             if (!endOfGame) {
-                int m = bot.newMove();
+                Position m = bot.newMove();
                 assertThat(model.checkMove(m), is(true));
             }
         }

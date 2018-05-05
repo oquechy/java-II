@@ -12,7 +12,7 @@ public class Model {
     /**
      * Width and height of the field
      */
-    public final static int SIZE = 3;
+    public final static int ROW = 3;
 
     private Controller controller;
     private int moveCounter = 0;
@@ -23,8 +23,8 @@ public class Model {
      */
     public Model(Controller controller) {
         this.controller = controller;
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < SIZE; j++) {
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < ROW; j++) {
                 field[i][j] = Sign.N;
             }
         }
@@ -34,16 +34,16 @@ public class Model {
      * Verifies new move got from user or bot.
      * If move is correct, asks controller to draw it
      * and runs check for end of game.
-     * @param i index of new move from [0..8]
+     * @param position index of new move from [0..8]
      * @return {@code true} if move is correct and
      * {@code false} otherwise
      */
-    public boolean checkMove(int i) {
-        int y = i / SIZE;
-        int x = i % SIZE;
-        if (field[y][x] == Sign.N) {
-            field[y][x] = currentSign;
-            controller.writeSign(y, x, currentSign);
+    public boolean checkMove(Position position) {
+        int row = position.getX();
+        int col = position.getY();
+        if (field[row][col] == Sign.N) {
+            field[row][col] = currentSign;
+            controller.writeSign(row, col, currentSign);
             checkWin();
             currentSign = currentSign.flip();
             moveCounter++;
@@ -69,9 +69,9 @@ public class Model {
      */
     public static Sign getResult(Sign[][] field) {
         // rows
-        for (int i = 0; i < SIZE; i++) {
+        for (int i = 0; i < ROW; i++) {
             boolean win = field[i][0] != Sign.N;
-            for (int j = 1; j < SIZE; j++) {
+            for (int j = 1; j < ROW; j++) {
                 win &= field[i][j] == field[i][0];
             }
 
@@ -81,9 +81,9 @@ public class Model {
         }
 
         // cols
-        for (int i = 0; i < SIZE; i++) {
+        for (int i = 0; i < ROW; i++) {
             boolean win = field[0][i] != Sign.N;
-            for (int j = 1; j < SIZE; j++) {
+            for (int j = 1; j < ROW; j++) {
                 win &= field[j][i] == field[0][i];
             }
 
@@ -94,7 +94,7 @@ public class Model {
 
         // diagonals
         boolean win = field[1][1] != Sign.N;
-        for (int i = 1; i < SIZE; i++) {
+        for (int i = 1; i < ROW; i++) {
             win &= field[i][i] == field[0][0];
         }
 
@@ -103,8 +103,8 @@ public class Model {
         }
 
         win = field[1][1] != Sign.N;
-        for (int i = 1; i < SIZE; i++) {
-            win &= field[i][SIZE - i - 1] == field[0][SIZE - 1];
+        for (int i = 1; i < ROW; i++) {
+            win &= field[i][ROW - i - 1] == field[0][ROW - 1];
         }
 
         if (win) {
@@ -117,8 +117,8 @@ public class Model {
     }
 
     private static boolean filled(Sign[][] field) {
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < SIZE; j++) {
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < ROW; j++) {
                 if (field[i][j] == Sign.N) {
                     return false;
                 }
@@ -130,12 +130,12 @@ public class Model {
 
     /**
      * Checks whether the given cell is filled with X or O.
-     * @param i index of the cell from [0..8]
+     * @param position index of the cell from [0..8]
      * @return {@code true} if cell is busy
      * and {@code false} otherwise
      */
-    public boolean isBusy(int i) {
-        return field[i / SIZE][i % SIZE] != Sign.N;
+    public boolean isBusy(Position position) {
+        return field[position.getX()][position.getY()] != Sign.N;
     }
 
     /**
@@ -151,7 +151,7 @@ public class Model {
     private Sign currentSign = Sign.X;
 
     @NotNull
-    private Sign[][] field = new Sign[SIZE][SIZE];
+    private Sign[][] field = new Sign[ROW][ROW];
 
     /**
      * Returns total number of moves in the round.
