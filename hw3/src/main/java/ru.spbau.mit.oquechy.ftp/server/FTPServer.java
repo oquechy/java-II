@@ -120,7 +120,7 @@ public class FTPServer {
             return;
         }
 
-        for (File file : files) {
+        for (@Nullable File file : files) {
             if (file != null) {
                 outputStream.writeUTF(file.getName());
                 outputStream.writeBoolean(file.isDirectory());

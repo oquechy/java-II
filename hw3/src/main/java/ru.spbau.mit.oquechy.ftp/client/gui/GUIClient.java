@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Graphic application connects to server by hostname,
@@ -32,11 +33,13 @@ public class GUIClient extends Application {
      * @throws Exception if uploading of FXML fails
      */
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(@NotNull Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("GUIClient.fxml"));
         primaryStage.setTitle("Getty");
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
-        Scene scene = new Scene(root);
+        @NotNull Scene scene = new Scene(root);
+        primaryStage.setMinWidth(300);
+        primaryStage.setMinHeight(150);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -46,7 +49,7 @@ public class GUIClient extends Application {
      */
     @Override
     public void stop() {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("GUIClient.fxml"));
+        @NotNull FXMLLoader loader = new FXMLLoader(getClass().getResource("GUIClient.fxml"));
         GUIController controller = loader.getController();
         if (controller != null) {
             controller.closeConnection();

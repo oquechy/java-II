@@ -7,12 +7,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.spbau.mit.oquechy.ftp.client.FTPClient;
 import ru.spbau.mit.oquechy.ftp.types.FileInfo;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implementation of handlers for UI elements.
@@ -49,8 +52,8 @@ public class GUIController {
             return;
         }
 
-        String src = getPath(selectedItem);
-        FileChooser fileChooser = new FileChooser();
+        @NotNull String src = getPath(selectedItem);
+        @NotNull FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         Window window = treeView.getScene().getWindow();
         File dst = fileChooser.showSaveDialog(window);
@@ -60,7 +63,7 @@ public class GUIController {
             showChooseFileAlert(Alert.AlertType.ERROR, DIRECTORY_CHOSEN);
         } else {
             showChooseFileAlert(Alert.AlertType.INFORMATION, DOWNLOAD_STARTED);
-            Task task = new Task<Void>() {
+            @Nullable Task task = new Task<Void>() {
                 @Override
                 public Void call() {
                     try {
@@ -78,8 +81,8 @@ public class GUIController {
     }
 
     private void showSavingConfirmation(String src, File dst) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        Label label = new Label("File \"" + src + "\"\n was saved to \"" + dst + "\"!");
+        @NotNull Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        @NotNull Label label = new Label("File \"" + src + "\"\n was saved to \"" + dst + "\"!");
         label.setWrapText(true);
         alert.getDialogPane().setContent(label);
         alert.setTitle("Saving");
@@ -88,7 +91,7 @@ public class GUIController {
     }
 
     private String getPath(TreeItem<FileInfo> selectedItem) {
-        StringBuilder stringBuilder = new StringBuilder();
+        @NotNull StringBuilder stringBuilder = new StringBuilder();
         for (; selectedItem.getParent() != null; selectedItem = selectedItem.getParent()) {
             stringBuilder.append(new StringBuilder(selectedItem.getValue().getName()).reverse().toString())
                     .append(File.separator);
@@ -97,7 +100,7 @@ public class GUIController {
     }
 
     private void showChooseFileAlert(Alert.AlertType alertType, String message) {
-        Alert alert = new Alert(alertType);
+        @NotNull Alert alert = new Alert(alertType);
         alert.setTitle("Saving");
         alert.setHeaderText(null);
         alert.setContentText(message);
@@ -133,7 +136,7 @@ public class GUIController {
     }
 
     private void showIOError() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
+        @NotNull Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Socket error");
         alert.setHeaderText(null);
         alert.setContentText("Can't reach the server. Application will be closed");
@@ -154,6 +157,7 @@ public class GUIController {
      */
     private class DynamicFileTreeItem extends TreeItem<FileInfo> {
         private boolean loaded = false;
+        @Nullable
         private String path;
 
         /**
@@ -170,7 +174,7 @@ public class GUIController {
          * @param fileInfo which node links to
          * @param path relative path from root node
          */
-        public DynamicFileTreeItem(FileInfo fileInfo, String path) {
+        public DynamicFileTreeItem(FileInfo fileInfo, @Nullable String path) {
             super(fileInfo);
             this.path = path;
         }
@@ -196,10 +200,10 @@ public class GUIController {
             FileInfo file = treeItem.getValue();
             if (file.isDirectory()) {
                 try {
-                    List<FileInfo> files = ftpClient.list(path);
-                    ObservableList<DynamicFileTreeItem> children = FXCollections.observableArrayList();
+                    @NotNull List<FileInfo> files = ftpClient.list(Objects.requireNonNull(path));
+                    @NotNull ObservableList<DynamicFileTreeItem> children = FXCollections.observableArrayList();
 
-                    for (FileInfo childFile : files) {
+                    for (@NotNull FileInfo childFile : files) {
                         children.add(new DynamicFileTreeItem(childFile, path + File.separator + childFile.getName()));
                     }
 

@@ -162,7 +162,7 @@ class FTPTest {
     public void multiClients() throws IOException {
         @NotNull String dstFile1;
         @NotNull String dstFile2;
-        try (FTPClient client1 = FTPClient.start(LOCALHOST);
+        try (@NotNull FTPClient client1 = FTPClient.start(LOCALHOST);
              @NotNull FTPClient client2 = FTPClient.start(LOCALHOST)) {
             dstFile1 = DST_DIR + File.separator + "multiClients1.txt";
             dstFile2 = DST_DIR + File.separator + "multiClients2.txt";
