@@ -7,9 +7,9 @@ os:
   - linux
 
 before_script:
-  - wget https://services.gradle.org/distributions/gradle-4.7-bin.zip
-  - unzip gradle-4.7-bin.zip
-  - export GRADLE_HOME=$PWD/gradle-4.7
+  - wget https://services.gradle.org/distributions/gradle-4.6-bin.zip
+  - unzip gradle-4.6-bin.zip
+  - export GRADLE_HOME=$PWD/gradle-4.6
   - export PATH=$GRADLE_HOME/bin:$PATH
 
 script: 
