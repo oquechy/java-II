@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class ThreadPoolImplTest {
     @NotNull
@@ -82,12 +82,10 @@ public class ThreadPoolImplTest {
             syncStart[i] = new Object();
         }
 
-        @NotNull Object[] syncFinish = new Object[n - 1];
-        for (int i = 0; i < syncFinish.length; i++) {
-            syncFinish[i] = new Object();
-        }
+        @NotNull Object syncFinish = new Object();
+        @NotNull Object syncAdd = new Object();
 
-        @NotNull boolean[] isReady = new boolean[n - 1];
+        @NotNull boolean[] isReady = new boolean[n];
 
         @NotNull LinkedList<LightFuture<?>> tasks = new LinkedList<>();
 
@@ -99,11 +97,15 @@ public class ThreadPoolImplTest {
                     synchronized (syncStart[j]) {
                         syncStart[j].notify();
                     }
-                    synchronized (syncFinish[0]) {
+                    synchronized (syncAdd) {
                         addId(threadIDs);
                     }
-                    synchronized (syncFinish[j]) {
-                        syncFinish[j].wait();
+                    if (!isReady[n - 1]) {
+                        synchronized (syncFinish) {
+                            if (!isReady[n - 1]) {
+                                syncFinish.wait();
+                            }
+                        }
                     }
                 } catch (InterruptedException ignored) {
                 }
@@ -112,12 +114,12 @@ public class ThreadPoolImplTest {
         }
 
         tasks.add(threadPool.assignTask(() -> {
-            synchronized (syncFinish[0]) {
+            synchronized (syncAdd) {
                 addId(threadIDs);
             }
             // shouldn't be replaced with foreach in order to make synchronization not on local variable
             //noinspection ForLoopReplaceableByForEach
-            for (int i = 0; i < syncFinish.length; i++) {
+            for (int i = 0; i < syncStart.length; i++) {
                 while (!isReady[i]) {
                     synchronized (syncStart[i]) {
                         if (!isReady[i]) {
@@ -128,11 +130,13 @@ public class ThreadPoolImplTest {
                         }
                     }
                 }
-
-                synchronized (syncFinish[i]) {
-                    syncFinish[i].notify();
-                }
             }
+
+            synchronized (syncFinish) {
+                isReady[n - 1] = true;
+                syncFinish.notifyAll();
+            }
+
             return true;
         }));
 

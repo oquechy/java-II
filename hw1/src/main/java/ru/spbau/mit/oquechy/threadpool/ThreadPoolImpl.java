@@ -21,6 +21,7 @@ public class ThreadPoolImpl {
 
     /**
      * Starts threadsCount threads with access to queue of tasks.
+     *
      * @param threadsCount number of threads to be ran
      */
     public ThreadPoolImpl(int threadsCount) {
@@ -34,7 +35,8 @@ public class ThreadPoolImpl {
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                } catch (LightExecutionException ignored) { }
+                } catch (LightExecutionException ignored) {
+                }
             });
             threads[i].start();
         }
@@ -42,8 +44,9 @@ public class ThreadPoolImpl {
 
     /**
      * Interrupts all threads and stops the work.
+     *
      * @throws InterruptedException then waiting for other threads to join
-     * with main one was interrupted
+     *                              with main one was interrupted
      */
     public void shutdown() throws InterruptedException {
         for (@NotNull Thread thread : threads) {
@@ -57,8 +60,9 @@ public class ThreadPoolImpl {
 
     /**
      * Adds new task to pool.
+     *
      * @param supplier function to compute
-     * @param <T> return value of the supplier
+     * @param <T>      return value of the supplier
      * @return {@link LightFuture} object to track progress of task
      */
     @NotNull
@@ -70,34 +74,41 @@ public class ThreadPoolImpl {
 
     /**
      * Multi thread storage for supplier.
+     *
      * @param <T> return type of the supplier.
      * @param <U> return type of previous task if applicable.
      */
     private class LightFutureImpl<T, U> implements LightFuture<T> {
-        private T result;
-        private volatile boolean isReady = false;
         @NotNull
         private final Object syncSupplier = new Object();
         private final Object syncAfterTasks = new Object();
+        private final Queue<LightFutureImpl<?, T>> afterTasks = new LinkedList<>();
+        private T result;
+        private volatile boolean isReady = false;
         private Supplier<T> supplier;
-        private Function<U, T> function;
+        private Function<? super U, ? extends T> function;
         @Nullable
         private volatile LightExecutionException exception = null;
-        private final Queue<LightFutureImpl<?, T>> afterTasks = new LinkedList<>();
 
         /**
          * Doesn't call supplier.
+         *
          * @param supplier to be stored
          */
         private LightFutureImpl(Supplier<T> supplier) {
             this.supplier = supplier;
         }
 
+        private LightFutureImpl(Function<? super U, ? extends T> mapping) {
+            function = mapping;
+        }
+
         /**
          * Runs computation. Notifies any threads waiting for result.
          * Adds related tasks to thread pool.
+         *
          * @throws LightExecutionException if supplier throws an exception
-         * while running
+         *                                 while running
          */
         private void run() throws LightExecutionException {
             try {
@@ -128,10 +139,6 @@ public class ThreadPoolImpl {
             supplier = () -> function.apply(result);
         }
 
-        private LightFutureImpl(Function<U, T> mapping) {
-            function = mapping;
-        }
-
         /**
          * Returns true then computation is over.
          */
@@ -143,6 +150,7 @@ public class ThreadPoolImpl {
         /**
          * Waits for computation to end and returns result of
          * computation every time the same.
+         *
          * @return return value of the supplier
          */
         @Override
@@ -177,7 +185,7 @@ public class ThreadPoolImpl {
          */
         @NotNull
         @Override
-        public <V> LightFuture<V> thenApply(@NotNull Function<T, V> mapping) {
+        public <V> LightFuture<V> thenApply(@NotNull Function<? super T, V> mapping) {
             if (isReady) {
                 @NotNull LightFutureImpl<V, T> lightFuture = new LightFutureImpl<>(() -> mapping.apply(result));
                 queue.add(lightFuture);

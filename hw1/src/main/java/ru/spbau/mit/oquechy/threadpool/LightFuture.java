@@ -31,5 +31,5 @@ public interface LightFuture<T> {
      * @throws LightExecutionException if computation ends up with an exception
      */
     @NotNull
-    <U> LightFuture<U> thenApply(Function<T, U> mapping) throws InterruptedException, LightExecutionException;
+    <U> LightFuture<U> thenApply(Function<? super T, U> mapping) throws InterruptedException, LightExecutionException;
 }

@@ -5,27 +5,27 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class LightFutureImplTest {
 
-    private int cnt;
+    private AtomicInteger count = new AtomicInteger();
+
     @NotNull
-    private final Supplier<Integer> COUNTER = () -> {
-        synchronized (LightFutureImplTest.this) {
-            return cnt++;
-        }
-    };
+    private final Supplier<Integer> COUNTER = () -> count.getAndIncrement();
 
     @NotNull
     private final Supplier<?> THROWER = () -> {throw new IllegalArgumentException();};
 
     private ThreadPoolImpl threadPool;
+
     @NotNull
     private Supplier<String> HEAVY = () -> {
         String s = "s";
@@ -38,7 +38,7 @@ public class LightFutureImplTest {
     @Before
     public void SetUp() {
         threadPool = new ThreadPoolImpl(10);
-        cnt = 0;
+        count.set(0);
     }
     
      @Test
@@ -116,11 +116,11 @@ public class LightFutureImplTest {
     }
     
     @Test
-    public void getExceptionWhileRunningSupplier() throws InterruptedException, LightExecutionException {
+    public void getExceptionWhileRunningSupplier() throws InterruptedException {
         @NotNull LightFuture<?> task = threadPool.assignTask(THROWER);
         try {
             task.get();
-            assertTrue("exception should be thrown", false);
+            fail("exception should be thrown");
         } catch (LightExecutionException e) {
             assertThat(e.getCause(), instanceOf(IllegalArgumentException.class));
         }
@@ -182,7 +182,7 @@ public class LightFutureImplTest {
                 try {
                     assertThat(task.get(), is(0));
                 } catch (@NotNull InterruptedException | LightExecutionException e) {
-                    assertTrue("exception shouldn't be thrown", false);
+                    fail("exception shouldn't be thrown");
                 }
             });
         }
@@ -201,7 +201,7 @@ public class LightFutureImplTest {
                 try {
                     assertThat(task.thenApply((t) -> (t - j)).get(), is (-j));
                 } catch (@NotNull InterruptedException | LightExecutionException e) {
-                    assertTrue("exception shouldn't be thrown", false);
+                    fail("exception shouldn't be thrown");
                 }
             });
         }

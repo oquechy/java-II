@@ -16,7 +16,7 @@ public class ConcurrentQueueTest {
             false, new IllegalArgumentException(), -1e18, 0x1};
 
     @Test
-    public void add() throws InterruptedException {
+    public void correctMultithreadAdd_ShouldFinishWithoutDeadlocks() throws InterruptedException {
         @NotNull ConcurrentQueue<Object> queue = new ConcurrentQueue<>();
 
         @NotNull Thread[] threads = new Thread[OBJECTS.length];
@@ -29,9 +29,8 @@ public class ConcurrentQueueTest {
     }
 
     @Test
-    public void take() throws InterruptedException {
+    public void correctMultithreadTake() throws InterruptedException {
         @NotNull ConcurrentQueue<Object> queue = new ConcurrentQueue<>();
-        @NotNull Object sync = new Object();
 
         for (Object object : OBJECTS) {
             queue.add(object);
@@ -43,7 +42,7 @@ public class ConcurrentQueueTest {
             threads[i] = new Thread(() -> {
                 try {
                     Object object = queue.take();
-                    synchronized (sync) {
+                    synchronized (taken) {
                         taken.add(object);
                     }
                 } catch (InterruptedException ignored) { }
