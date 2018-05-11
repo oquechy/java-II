@@ -1,5 +1,6 @@
 package ru.spbau.mit.oquechy.myjunit.examples;
 
+import org.jetbrains.annotations.NotNull;
 import ru.spbau.mit.oquechy.myjunit.annotations.*;
 
 import java.util.*;
@@ -10,6 +11,7 @@ import static org.hamcrest.Matchers.*;
 
 @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "unused"})
 public class Valid {
+    @NotNull
     private List<String> INVOKED = new LinkedList<>();
 
     private final static int ENABLED_TESTS_COUNT = 4;

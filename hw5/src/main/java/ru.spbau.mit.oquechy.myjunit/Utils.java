@@ -15,7 +15,7 @@ public class Utils {
      * @param file file which contains a class
      */
     @NotNull
-    public static String getClassName(File classes, File file) {
+    public static String getClassName(@NotNull File classes, @NotNull File file) {
         return getRelativePath(file, classes).split("\\.class")[0].replace(File.separatorChar, '.');
     }
 

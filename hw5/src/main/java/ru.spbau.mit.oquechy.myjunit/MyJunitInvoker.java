@@ -79,9 +79,9 @@ public class MyJunitInvoker {
             InstantiationException, IllegalAccessException, InvocationTargetException,
             MalformedURLException, ClassNotFoundException {
 
-        ArrayList<Class<?>> classes = loadClasses(path);
+        @NotNull ArrayList<Class<?>> classes = loadClasses(path);
 
-        for (Class<?> c : classes) {
+        for (@NotNull Class<?> c : classes) {
             invoke(c);
         }
     }
@@ -98,30 +98,32 @@ public class MyJunitInvoker {
      *                                        ends up with exception
      * @throws IllegalAccessException         if private method was called
      */
-    public static void invoke(Class<?> c) throws MyJunitInvocationException, MyJunitClassificationException,
+    public static void invoke(@NotNull Class<?> c) throws MyJunitInvocationException, MyJunitClassificationException,
             InstantiationException, InvocationTargetException, IllegalAccessException {
-        MyJunitClassifier classifier = validate(c);
-        Object instance = getInstance(c);
-        Logger logger = new Logger();
+        @NotNull MyJunitClassifier classifier = validate(c);
+        @NotNull Object instance = getInstance(c);
+        @NotNull Logger logger = new Logger();
         run(instance, classifier, logger);
     }
 
+    @NotNull
     private static ArrayList<Class<?>> loadClasses(String path) throws MalformedURLException, ClassNotFoundException {
         path = ensureSlash(path);
 
-        File classPath = new File(path);
-        URL classesURL = new URL("file:" + path);
-        ClassLoader classLoader = new URLClassLoader(new URL[]{classesURL});
+        @NotNull File classPath = new File(path);
+        @NotNull URL classesURL = new URL("file:" + path);
+        @NotNull ClassLoader classLoader = new URLClassLoader(new URL[]{classesURL});
 
-        ArrayList<Class<?>> classes = new ArrayList<>();
-        for (File file : FileUtils.listFiles(classPath, new String[]{"class"}, true)) {
-            String className = Utils.getClassName(classPath, file);
+        @NotNull ArrayList<Class<?>> classes = new ArrayList<>();
+        for (@NotNull File file : FileUtils.listFiles(classPath, new String[]{"class"}, true)) {
+            @NotNull String className = Utils.getClassName(classPath, file);
             Class<?> testClass = classLoader.loadClass(className);
             classes.add(testClass);
         }
         return classes;
     }
 
+    @NotNull
     private static String ensureSlash(String path) {
         return path.endsWith(separator) ? path : path + separator;
     }
@@ -142,8 +144,8 @@ public class MyJunitInvoker {
     @NotNull
     private static MyJunitClassifier validate(Class<?> testClass)
             throws MyJunitInvocationException, MyJunitClassificationException {
-        MyJunitClassifier classifier = new MyJunitClassifier();
-        for (Method method : testClass.getDeclaredMethods()) {
+        @NotNull MyJunitClassifier classifier = new MyJunitClassifier();
+        for (@NotNull Method method : testClass.getDeclaredMethods()) {
             boolean isMyJunitMethod = classifier.classify(method);
 
             if (isMyJunitMethod && method.getParameterCount() != 0) {
@@ -158,15 +160,15 @@ public class MyJunitInvoker {
 
         logger.start();
 
-        for (Method m : classifier.getBeforeAll()) {
+        for (@NotNull Method m : classifier.getBeforeAll()) {
             m.invoke(testClass);
         }
 
         ArrayList<Method> beforeEach = classifier.getBeforeEach();
         ArrayList<Method> afterEach = classifier.getAfterEach();
 
-        for (Method m : classifier.getEnabledTests()) {
-            for (Method before : beforeEach) {
+        for (@NotNull Method m : classifier.getEnabledTests()) {
+            for (@NotNull Method before : beforeEach) {
                 before.invoke(testClass);
             }
 
@@ -179,16 +181,16 @@ public class MyJunitInvoker {
                 logger.finishTest();
             }
 
-            for (Method method : afterEach) {
+            for (@NotNull Method method : afterEach) {
                 method.invoke(testClass);
             }
         }
 
-        for (Method m : classifier.getAfterAll()) {
+        for (@NotNull Method m : classifier.getAfterAll()) {
             m.invoke(testClass);
         }
 
-        for (Method m : classifier.getDisabledTests()) {
+        for (@NotNull Method m : classifier.getDisabledTests()) {
             logger.ignore(m);
         }
 

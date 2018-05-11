@@ -1,5 +1,6 @@
 package ru.spbau.mit.oquechy.myjunit;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +25,8 @@ class MyJunitClassifierTest {
 
     @Test
     void classifyValidClass() throws MyJunitClassificationException, NoSuchMethodException {
-        Class<Valid> validClass = Valid.class;
-        for (Method method : validClass.getDeclaredMethods()) {
+        @NotNull Class<Valid> validClass = Valid.class;
+        for (@NotNull Method method : validClass.getDeclaredMethods()) {
             if (!method.getName().equals("notATest") && !method.getName().equals("validate")) {
                 assertThat(classifier.classify(method), is(true));
             } else {
@@ -58,8 +59,8 @@ class MyJunitClassifierTest {
 
     @Test
     void incompatibleAnnotations() {
-        Class<IncompatibleAnnotations> invalidClass = IncompatibleAnnotations.class;
-        for (Method method : invalidClass.getDeclaredMethods()) {
+        @NotNull Class<IncompatibleAnnotations> invalidClass = IncompatibleAnnotations.class;
+        for (@NotNull Method method : invalidClass.getDeclaredMethods()) {
             assertThrows(MyJunitClassificationException.class, () -> classifier.classify(method));
         }
     }

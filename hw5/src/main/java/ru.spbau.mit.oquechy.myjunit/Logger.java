@@ -1,6 +1,7 @@
 package ru.spbau.mit.oquechy.myjunit;
 
 import com.google.common.base.Stopwatch;
+import org.jetbrains.annotations.NotNull;
 import ru.spbau.mit.oquechy.myjunit.annotations.Test;
 
 import java.lang.reflect.Method;
@@ -23,7 +24,9 @@ import static java.lang.Integer.max;
  */
 public class Logger {
 
+    @NotNull
     private Stopwatch generalClock = Stopwatch.createUnstarted();
+    @NotNull
     private Stopwatch clock = Stopwatch.createUnstarted();
 
     private Method method;
@@ -47,7 +50,7 @@ public class Logger {
      *
      * @param method method to be measured
      */
-    public void startTest(Method method) {
+    public void startTest(@NotNull Method method) {
         this.method = method;
         exceptionHandled = false;
         failed = false;
@@ -58,7 +61,7 @@ public class Logger {
     private void printStyledString(String s, String style) {
         System.out.print(style);
         int n = 0;
-        for (String line : s.split("\n")) {
+        for (@NotNull String line : s.split("\n")) {
             n = max(n, line.length());
         }
 
@@ -79,7 +82,7 @@ public class Logger {
      * Stops the timer and logs result.
      */
     public void finishTest() {
-        Stopwatch reset = clock.reset();
+        @NotNull Stopwatch reset = clock.reset();
         Class<? extends Throwable> expected = method.getAnnotation(Test.class).expected();
         if (expected != Test.None.class && !exceptionHandled) {
             printStyledString("Expected but wasn't thrown: " + expected.getName(), ANSIStyle.RED);
@@ -96,7 +99,7 @@ public class Logger {
      *
      * @param cause {@link Throwable} thrown by the method call
      */
-    public void registerException(Throwable cause) {
+    public void registerException(@NotNull Throwable cause) {
         exceptionHandled = true;
         Class<? extends Throwable> expected = method.getAnnotation(Test.class).expected();
         Class<? extends Throwable> actual = cause.getClass();
@@ -129,7 +132,7 @@ public class Logger {
      *
      * @param m method to be ignored
      */
-    public void ignore(Method m) {
+    public void ignore(@NotNull Method m) {
         String cause = m.getAnnotation(Test.class).ignore();
         printStyledString("Test " + m.getName() + " disabled. Cause: " + cause, ANSIStyle.CYAN);
         ignoredCount++;

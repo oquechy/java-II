@@ -1,5 +1,6 @@
 package ru.spbau.mit.oquechy.myjunit;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import ru.spbau.mit.oquechy.myjunit.examples.IncompatibleAnnotations;
 import ru.spbau.mit.oquechy.myjunit.examples.MethodWithParameters;
@@ -43,25 +44,25 @@ class MyJunitInvokerTest {
     @Test
     void validFromClassPath() throws InvocationTargetException, IllegalAccessException,
             MyJunitInvocationException, MyJunitClassificationException, InstantiationException {
-        Class<?> valid = Valid.class;
+        @NotNull Class<?> valid = Valid.class;
         MyJunitInvoker.invoke(valid);
     }
 
     @Test
     void noDefaultConstructor() {
-        Class<?> invalid = NoDefaultConstructor.class;
+        @NotNull Class<?> invalid = NoDefaultConstructor.class;
         assertThrows(MyJunitInvocationException.class, () -> MyJunitInvoker.invoke(invalid));
     }
 
     @Test
     void methodWithParameters() {
-        Class<?> invalid = MethodWithParameters.class;
+        @NotNull Class<?> invalid = MethodWithParameters.class;
         assertThrows(MyJunitInvocationException.class, () -> MyJunitInvoker.invoke(invalid));
     }
 
     @Test
     void incompatibleAnnotations() {
-        Class<?> invalid = IncompatibleAnnotations.class;
+        @NotNull Class<?> invalid = IncompatibleAnnotations.class;
         assertThrows(MyJunitClassificationException.class, () -> MyJunitInvoker.invoke(invalid));
     }
 }
