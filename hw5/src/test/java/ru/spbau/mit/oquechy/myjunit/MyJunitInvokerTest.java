@@ -1,10 +1,14 @@
 package ru.spbau.mit.oquechy.myjunit;
 
 import org.junit.jupiter.api.Test;
+import ru.spbau.mit.oquechy.myjunit.examples.IncompatibleAnnotations;
+import ru.spbau.mit.oquechy.myjunit.examples.MethodWithParameters;
+import ru.spbau.mit.oquechy.myjunit.examples.NoDefaultConstructor;
 import ru.spbau.mit.oquechy.myjunit.examples.Valid;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.util.LinkedList;
 
 import static java.io.File.separator;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -15,58 +19,49 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MyJunitInvokerTest {
 
-    private String PATH_TO_CLASS = getClass().getResource("classes").getPath();
-    private String PATH_TO_JAR = getClass().getResource("test.jar").getPath();
+    private final static String PATH_TO_CLASSES = MyJunitInvokerTest.class.getResource("classes").getPath();
+    private final static String PATH_TO_VALID = PATH_TO_CLASSES + separator + "valid";
+    private final static String PATH_TO_BAD_INVOKE = PATH_TO_CLASSES + separator + "badinvoke";
+    private final static String PATH_TO_BAD_CLASSIFY = PATH_TO_CLASSES + separator + "badclassify";
 
     @Test
-    void validFromPath() throws ClassNotFoundException, InvocationTargetException,
-            MyJunitClassificationException, InstantiationException, MyJunitInvocationException, IllegalAccessException,
-            MalformedURLException {
-        MyJunitInvoker.invoke(PATH_TO_CLASS);
-        assertCorrectTests();
-        Valid.INVOKED.clear();
+    void validFromClassFile() throws IllegalAccessException, MyJunitInvocationException, InstantiationException,
+            MyJunitClassificationException, MalformedURLException, InvocationTargetException, ClassNotFoundException {
+        MyJunitInvoker.invokeTests(PATH_TO_VALID);
     }
 
     @Test
-    void validFromJar() throws ClassNotFoundException, InvocationTargetException,
-            MyJunitClassificationException, InstantiationException, MyJunitInvocationException, IllegalAccessException,
-            MalformedURLException {
-        MyJunitInvoker.invoke(PATH_TO_JAR);
-        assertCorrectTests();
-        Valid.INVOKED.clear();
+    void badInvokeFromClassFile() {
+        assertThrows(MyJunitInvocationException.class, () -> MyJunitInvoker.invokeTests(PATH_TO_BAD_INVOKE));
     }
 
     @Test
-    void validAnnotationsByClass() throws InvocationTargetException, IllegalAccessException,
+    void badClassifyFromClassFile() {
+        assertThrows(MyJunitClassificationException.class, () -> MyJunitInvoker.invokeTests(PATH_TO_BAD_CLASSIFY));
+    }
+
+    @Test
+    void validFromClassPath() throws InvocationTargetException, IllegalAccessException,
             MyJunitInvocationException, MyJunitClassificationException, InstantiationException {
         Class<?> valid = Valid.class;
         MyJunitInvoker.invoke(valid);
-        assertCorrectTests();
-        Valid.INVOKED.clear();
-    }
-
-    private void assertCorrectTests() {
-        assertThat(Valid.INVOKED, hasSize(Valid.ENABLED_TESTS_COUNT));
-        assertThat(Valid.INVOKED, not(hasItem(Valid.NOT_A_TEST)));
-        assertThat(Valid.INVOKED, not(hasItem(Valid.IGNORED_1)));
-        assertThat(Valid.INVOKED, not(hasItem(Valid.IGNORED_2)));
     }
 
     @Test
-    void noDefaultConstructor() throws ClassNotFoundException {
-        Class<?> invalid = Class.forName("ru.spbau.mit.oquechy.myjunit.examples.NoDefaultConstructor");
+    void noDefaultConstructor() {
+        Class<?> invalid = NoDefaultConstructor.class;
         assertThrows(MyJunitInvocationException.class, () -> MyJunitInvoker.invoke(invalid));
     }
 
     @Test
-    void methodWithParameters() throws ClassNotFoundException {
-        Class<?> invalid = Class.forName("ru.spbau.mit.oquechy.myjunit.examples.MethodWithParameters");
+    void methodWithParameters() {
+        Class<?> invalid = MethodWithParameters.class;
         assertThrows(MyJunitInvocationException.class, () -> MyJunitInvoker.invoke(invalid));
     }
 
     @Test
-    void incompatibleAnnotations() throws ClassNotFoundException {
-        Class<?> invalid = Class.forName("ru.spbau.mit.oquechy.myjunit.examples.IncompatibleAnnotations");
+    void incompatibleAnnotations() {
+        Class<?> invalid = IncompatibleAnnotations.class;
         assertThrows(MyJunitClassificationException.class, () -> MyJunitInvoker.invoke(invalid));
     }
 }

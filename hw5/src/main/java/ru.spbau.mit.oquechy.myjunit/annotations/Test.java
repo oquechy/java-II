@@ -10,11 +10,16 @@ import java.lang.annotation.Target;
 /**
  * Indicates that annotated method is a test and should
  * be run by {@link MyJunitInvoker}.
+ * <p>
+ * Test will be disabled if {@code ignore} contains not default value {@code Test.EMPTY}.
+ * <p>
+ * If the test method should throw an exception, you can check it by
+ * setting {@code expected} to class of the desired exception.
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Test {
-    String EMPTY = "<‽>";
+    String EMPTY = "<#EMPTY#>";
 
     /**
      * Optionally specify a Throwable to cause a test method to succeed if
@@ -30,6 +35,7 @@ public @interface Test {
     /**
      * Default empty exception.
      */
-    class None extends Throwable { }
+    class None extends Throwable {
+    }
 }
 
