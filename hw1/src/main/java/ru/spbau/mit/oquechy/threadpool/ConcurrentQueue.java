@@ -21,8 +21,8 @@ public class ConcurrentQueue<E> {
     public void add(E e) {
         synchronized (queue) {
             queue.add(e);
-            if (queue.size() == 1) {
-                queue.notifyAll();
+            if (queue.size() > 0) {
+                queue.notify();
             }
         }
     }

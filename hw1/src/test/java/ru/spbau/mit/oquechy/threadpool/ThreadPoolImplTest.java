@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.function.Supplier;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -85,14 +86,14 @@ public class ThreadPoolImplTest {
         @NotNull Object syncFinish = new Object();
         @NotNull Object syncAdd = new Object();
 
-        @NotNull boolean[] isReady = new boolean[n];
+        @NotNull AtomicIntegerArray isReady = new AtomicIntegerArray(n - 1);
 
         @NotNull LinkedList<LightFuture<?>> tasks = new LinkedList<>();
 
         for (int i = 0; i < n - 1; i++) {
             int j = i;
             tasks.add(threadPool.assignTask(() -> {
-                isReady[j] = true;
+                isReady.set(j, 1);
                 try {
                     synchronized (syncStart[j]) {
                         syncStart[j].notify();
@@ -100,12 +101,8 @@ public class ThreadPoolImplTest {
                     synchronized (syncAdd) {
                         addId(threadIDs);
                     }
-                    if (!isReady[n - 1]) {
-                        synchronized (syncFinish) {
-                            if (!isReady[n - 1]) {
-                                syncFinish.wait();
-                            }
-                        }
+                    synchronized (syncFinish) {
+                        syncFinish.wait();
                     }
                 } catch (InterruptedException ignored) {
                 }
@@ -120,9 +117,9 @@ public class ThreadPoolImplTest {
             // shouldn't be replaced with foreach in order to make synchronization not on local variable
             //noinspection ForLoopReplaceableByForEach
             for (int i = 0; i < syncStart.length; i++) {
-                while (!isReady[i]) {
+                while (isReady.get(i) == 0) {
                     synchronized (syncStart[i]) {
-                        if (!isReady[i]) {
+                        if (isReady.get(i) == 0) {
                             try {
                                 syncStart[i].wait();
                             } catch (InterruptedException ignored) {
@@ -133,14 +130,14 @@ public class ThreadPoolImplTest {
             }
 
             synchronized (syncFinish) {
-                isReady[n - 1] = true;
                 syncFinish.notifyAll();
             }
 
             return true;
         }));
 
-        for (@NotNull LightFuture<?> task : tasks) {
+        for (int i = tasks.size() - 1; i >= 0; i--) {
+            LightFuture<?> task = tasks.get(i);
             task.get();
         }
 
