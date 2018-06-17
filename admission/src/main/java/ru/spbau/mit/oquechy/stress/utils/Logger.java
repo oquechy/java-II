@@ -21,7 +21,7 @@ public class Logger implements AutoCloseable {
         servingWriter = new OutputStreamWriter(new FileOutputStream(name + "serving"));
 
         String header = "-- iterations: " + iterations + " step: " + step + " queries: " + queries + " length: " +
-                length + "clients: " + clients + " delay: " + pause;
+                length + " clients: " + clients + " delay: " + pause;
         sortingWriter.write(header);
         transmittingWriter.write(header);
         servingWriter.write(header);

@@ -2,12 +2,15 @@ package ru.spbau.mit.oquechy.stress.server;
 
 import com.google.common.base.Stopwatch;
 import ru.spbau.mit.oquechy.stress.MessageProto;
+import ru.spbau.mit.oquechy.stress.utils.Protobuf;
 import ru.spbau.mit.oquechy.stress.utils.Statistic;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -15,9 +18,9 @@ public class ServerSeparateThreads extends Server {
 
     @Override
     public Statistic run(int clientsNumber, int queriesNumber) throws IOException, InterruptedException {
-        sortingTime = new AtomicLong(0);
-        transmittingTime = new AtomicLong(0);
-        servingTime = new AtomicLong(0);
+        sortingTime = new AtomicInteger(0);
+        transmittingTime = new AtomicInteger(0);
+        servingTime = new AtomicInteger(0);
         Thread[] threads = new Thread[clientsNumber];
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Server started");
@@ -39,8 +42,7 @@ public class ServerSeparateThreads extends Server {
             for (int i = 0; i < expectedQueries; i++) {
                 processQuery(socket);
             }
-            long total = receiveStatistic(socket);
-            servingTime.getAndAdd(total);
+            servingTime.getAndAdd(receiveStatistic(socket));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,15 +52,15 @@ public class ServerSeparateThreads extends Server {
         InputStream inputStream = socket.getInputStream();
         OutputStream outputStream = socket.getOutputStream();
 
+        MessageProto.Message message = Protobuf.parseDelimitedFrom(inputStream);
         Stopwatch transmission = Stopwatch.createStarted();
-        MessageProto.Message message = MessageProto.Message.parseDelimitedFrom(inputStream);
 
         Stopwatch sorting = Stopwatch.createStarted();
         MessageProto.Message response = getResponse(message);
-        sortingTime.getAndAdd(sorting.elapsed(MILLISECONDS));
+        sortingTime.getAndAdd((int) sorting.elapsed(MILLISECONDS));
 
-        response.writeDelimitedTo(outputStream);
-        transmittingTime.getAndAdd(transmission.elapsed(MILLISECONDS));
+        Protobuf.writeDelimitedTo(response, outputStream);
+        transmittingTime.getAndAdd((int) transmission.elapsed(MILLISECONDS));
         outputStream.flush();
     }
 }

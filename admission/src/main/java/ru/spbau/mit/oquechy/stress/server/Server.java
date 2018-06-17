@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -18,9 +19,9 @@ public abstract class Server {
 
     public abstract Statistic run(int expectedClients, int expectedQueries) throws IOException, InterruptedException;
 
-    protected AtomicLong sortingTime;
-    protected AtomicLong transmittingTime;
-    protected AtomicLong servingTime;
+    protected AtomicInteger sortingTime;
+    protected AtomicInteger transmittingTime;
+    protected AtomicInteger servingTime;
 
     protected MessageProto.Message getResponse(MessageProto.Message message) {
         int[] array = message.getNumberList().stream().mapToInt(x -> x).toArray();
@@ -28,7 +29,7 @@ public abstract class Server {
         return MessageProto.Message.newBuilder().addAllNumber(list).build();
     }
 
-    protected long receiveStatistic(Socket socket) throws IOException {
-        return new DataInputStream(socket.getInputStream()).readLong();
+    protected int receiveStatistic(Socket socket) throws IOException {
+        return new DataInputStream(socket.getInputStream()).readInt();
     }
 }

@@ -20,7 +20,7 @@
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
     </padding>
-    <VBox alignment="TOP_CENTER" minWidth="-Infinity" prefWidth="224.0" spacing="5.0" HBox.hgrow="ALWAYS">
+    <VBox alignment="TOP_CENTER" minWidth="224.0" prefWidth="224.0" maxWidth="224.0" spacing="5.0" HBox.hgrow="ALWAYS">
         <padding>
             <Insets bottom="10.0" left="5.0" right="10.0" top="10.0" />
         </padding>

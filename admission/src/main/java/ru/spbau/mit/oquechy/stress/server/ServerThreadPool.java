@@ -2,12 +2,14 @@ package ru.spbau.mit.oquechy.stress.server;
 
 import com.google.common.base.Stopwatch;
 import ru.spbau.mit.oquechy.stress.MessageProto.Message;
+import ru.spbau.mit.oquechy.stress.utils.Protobuf;
 import ru.spbau.mit.oquechy.stress.utils.Statistic;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -21,9 +23,9 @@ public class ServerThreadPool extends Server {
 
     @Override
     public Statistic run(int clientsNumber, int queriesNumber) throws IOException, InterruptedException {
-        sortingTime = new AtomicLong(0);
-        transmittingTime = new AtomicLong(0);
-        servingTime = new AtomicLong(0);
+        sortingTime = new AtomicInteger(0);
+        transmittingTime = new AtomicInteger(0);
+        servingTime = new AtomicInteger(0);
 
         Thread[] threads = new Thread[clientsNumber];
         writers = new ExecutorService[clientsNumber];
@@ -32,6 +34,7 @@ public class ServerThreadPool extends Server {
         }
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server started");
             for (int i = 0; i < clientsNumber; i++) {
                 Socket socket = serverSocket.accept();
                 int id = i;
@@ -53,8 +56,7 @@ public class ServerThreadPool extends Server {
             for (int i = 0; i < expectedQueries; i++) {
                 processQuery(socket, id);
             }
-            long total = receiveStatistic(socket);
-            servingTime.getAndAdd(total);
+            servingTime.getAndAdd(receiveStatistic(socket));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,17 +66,17 @@ public class ServerThreadPool extends Server {
         InputStream inputStream = socket.getInputStream();
         OutputStream outputStream = socket.getOutputStream();
 
+        Message message = Protobuf.parseDelimitedFrom(inputStream);
         Stopwatch transmission = Stopwatch.createStarted();
-        Message message = Message.parseDelimitedFrom(inputStream);
 
         pool.execute(() -> {
             Stopwatch sorting = Stopwatch.createStarted();
             Message response = getResponse(message);
-            sortingTime.getAndAdd(sorting.elapsed(MILLISECONDS));
+            sortingTime.getAndAdd((int) sorting.elapsed(MILLISECONDS));
             writers[id].execute(() -> {
                 try {
-                    response.writeDelimitedTo(outputStream);
-                    transmittingTime.getAndAdd(transmission.elapsed(MILLISECONDS));
+                    Protobuf.writeDelimitedTo(response, outputStream);
+                    transmittingTime.getAndAdd((int) transmission.elapsed(MILLISECONDS));
                     outputStream.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
