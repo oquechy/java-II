@@ -1,5 +1,6 @@
 package ru.spbau.mit.oquechy.stress.server;
 
+import com.google.common.base.Stopwatch;
 import ru.spbau.mit.oquechy.stress.MessageProto.Message;
 import ru.spbau.mit.oquechy.stress.types.Trinket;
 import ru.spbau.mit.oquechy.stress.utils.Statistic;
@@ -15,52 +16,61 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class ServerNonBlocking extends Server {
 
     private final Selector channelsToRead = Selector.open();
     private final Selector channelsToWrite = Selector.open();
+    private ExecutorService pool = Executors.newFixedThreadPool(3);
 
     public ServerNonBlocking() throws IOException { }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        new ServerNonBlocking().run(1, 1);
-    }
-
     @Override
     public Statistic run(int clientsNumber, int queriesNumber) throws IOException, InterruptedException {
-        ServerSocketChannel server = ServerSocketChannel.open();
-        server.bind(new InetSocketAddress(PORT));
+        sortingTime = new AtomicInteger(0);
+        transmittingTime = new AtomicInteger(0);
+        servingTime = new AtomicInteger(0);
+        Thread readingThread;
+        Thread writingThread;
+        try (ServerSocketChannel server = ServerSocketChannel.open()) {
+            server.bind(new InetSocketAddress(PORT));
 
-        Thread readingThread = new Thread(() -> readingCycle(clientsNumber));
-        readingThread.setName("Reader");
-        readingThread.start();
-        Thread writingThread = new Thread(() -> writingCycle(clientsNumber));
-        writingThread.setName("Writer");
-        writingThread.start();
+            readingThread = new Thread(() -> readingCycle(clientsNumber));
+            readingThread.setName("Reader");
+            readingThread.start();
+            writingThread = new Thread(() -> writingCycle(clientsNumber));
+            writingThread.setName("Writer");
+            writingThread.start();
 
-        for (int i = 0; i < clientsNumber; i++) {
-            SocketChannel client = server.accept();
-            client.configureBlocking(false);
+            for (int i = 0; i < clientsNumber; i++) {
+                SocketChannel client = server.accept();
+                client.configureBlocking(false);
 
-            SelectionKey writeKey;
-            Trinket trinket;
-            synchronized (channelsToWrite) {
-                writeKey = client.register(channelsToWrite, SelectionKey.OP_WRITE);
-                trinket = new Trinket(queriesNumber, null);
-                writeKey.attach(trinket);
-            }
+                SelectionKey writeKey;
+                Trinket trinket;
+                synchronized (channelsToWrite) {
+                    writeKey = client.register(channelsToWrite, SelectionKey.OP_WRITE);
+                    trinket = new Trinket(queriesNumber, null);
+                    writeKey.attach(trinket);
+                }
 
-            SelectionKey readKey;
-            synchronized (channelsToRead) {
-                readKey = client.register(channelsToRead, SelectionKey.OP_READ);
-                readKey.attach(new Trinket(queriesNumber, trinket));
+                SelectionKey readKey;
+                synchronized (channelsToRead) {
+                    readKey = client.register(channelsToRead, SelectionKey.OP_READ);
+                    readKey.attach(new Trinket(queriesNumber, trinket));
+                }
             }
         }
 
         readingThread.join();
         writingThread.join();
-        return null;
+        return new Statistic(sortingTime.get(), transmittingTime.get(), servingTime.get(),
+                clientsNumber * queriesNumber);
     }
 
     private void writingCycle(int clientsNumber) {
@@ -83,6 +93,8 @@ public class ServerNonBlocking extends Server {
                     SocketChannel clientChannel = (SocketChannel) key.channel();
 
                     Trinket trinket = (Trinket) key.attachment();
+                    // I prefer trusting nio
+                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
                     synchronized (trinket) {
                         ByteBuffer buffer = trinket.getMessageBuffer();
                         if (buffer == null) {
@@ -94,12 +106,17 @@ public class ServerNonBlocking extends Server {
                         clientChannel.socket().getOutputStream().flush();
 
                         if (buffer.position() == buffer.limit()) {
+                            Stopwatch stopwatch = trinket.getStopwatch();
+                            transmittingTime.getAndAdd((int) stopwatch.elapsed(MILLISECONDS));
+                            stopwatch.reset();
+
+                            trinket.getSizeBuffer().clear();
                             trinket.setMessageBuffer(null);
                             trinket.queryDone();
-//                            if (trinket.isFinished()) {
-//                                key.cancel();
-//                                clientsNumber--;
-//                            }
+                            if (trinket.isFinished()) {
+                                key.cancel();
+                                clientsNumber--;
+                            }
                         }
                     }
                 }
@@ -132,13 +149,17 @@ public class ServerNonBlocking extends Server {
                     Trinket trinket = (Trinket) key.attachment();
                     ByteBuffer sizeBuffer = trinket.getSizeBuffer();
                     ByteBuffer buffer = trinket.getMessageBuffer();
+                    Stopwatch stopwatch = trinket.getStopwatch();
+
+                    if (!stopwatch.isRunning()) {
+                        stopwatch.start();
+                    }
 
                     clientChannel.read(buffer == null ? sizeBuffer : buffer);
 
                     if (sizeBuffer.position() == sizeBuffer.capacity()) {
                         sizeBuffer.flip();
                         int received = getInt(sizeBuffer);
-                        System.out.println("integer received = " + received);
                         sizeBuffer.clear();
 
                         if (trinket.isFinished()) {
@@ -157,12 +178,16 @@ public class ServerNonBlocking extends Server {
                         byte[] serialized = new byte[buffer.capacity()];
                         buffer.get(serialized);
                         Message message = Message.parseFrom(serialized);
-                        System.out.println("arrayFromClient = " + message.getNumberList());
                         trinket.setMessageBuffer(null);
                         trinket.queryDone();
 
-                        message = getResponse(message);
-                        trinket.setWritingTrinket(message.getSerializedSize(), ByteBuffer.wrap(message.toByteArray()));
+                        pool.execute(() -> {
+                            Stopwatch sorting = Stopwatch.createStarted();
+                            Message response = getResponse(message);
+                            sortingTime.getAndAdd((int) sorting.elapsed(MILLISECONDS));
+                            trinket.setWritingTrinket(response.getSerializedSize(),
+                                    ByteBuffer.wrap(message.toByteArray()));
+                        });
                     }
                 }
             }

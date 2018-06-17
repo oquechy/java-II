@@ -27,11 +27,9 @@ public class Client {
             Stopwatch serving = Stopwatch.createStarted();
             OutputStream outputStream = socket.getOutputStream();
             for (int i = 0; i < queries; i++) {
-                System.out.println("i = " + i);
                 Message message = generateMessage(length);
                 Protobuf.writeDelimitedTo(message, outputStream);
                 outputStream.flush();
-                System.out.println("client generated message = " + message.getNumberList());
                 Protobuf.parseDelimitedFrom(socket.getInputStream());
                 sleep(delay);
             }
@@ -39,9 +37,4 @@ public class Client {
             outputStream.flush();
         }
     }
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        new Client("localhost", 3030, 6, 1, 0);
-    }
-
 }
