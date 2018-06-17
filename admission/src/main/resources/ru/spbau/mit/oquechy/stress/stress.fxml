@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<?import ru.spbau.mit.oquechy.stress.types.Architecture?>
+<?import ru.spbau.mit.oquechy.stress.types.Property?>
+
+<HBox fx:id="parent" maxHeight="Infinity" maxWidth="Infinity" minHeight="300" minWidth="500" prefHeight="500" prefWidth="700" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.spbau.mit.oquechy.stress.Controller">
+    <padding>
+        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+    </padding>
+    <VBox alignment="TOP_CENTER" minWidth="-Infinity" prefWidth="224.0" spacing="5.0" HBox.hgrow="ALWAYS">
+        <padding>
+            <Insets bottom="10.0" left="5.0" right="10.0" top="10.0" />
+        </padding>
+        <Label text="Architecture" />
+        <ChoiceBox fx:id="architectureCB" minWidth="-Infinity" prefWidth="150.0">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <Architecture fx:value="SEPARATE_THREAD"/>
+                    <Architecture fx:value="THREAD_POOL"/>
+                    <Architecture fx:value="NON_BLOCKING"/>
+                </FXCollections>
+            </items>
+        </ChoiceBox>
+        <VBox alignment="CENTER" spacing="5.0">
+            <padding>
+                <Insets bottom="10.0" top="10.0" />
+            </padding>
+            <Label alignment="CENTER" lineSpacing="2.0" text="Initial values" textAlignment="RIGHT" wrapText="true" />
+            <HBox alignment="CENTER" spacing="3.0">
+                <TextField fx:id="lengthTF" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="50.0" promptText="N" />
+                <TextField fx:id="clientsTF" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="50.0" promptText="M" />
+                <TextField fx:id="pauseTF" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="50.0" promptText="∆" />
+                <TextField fx:id="queriesTF" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="50.0" promptText="Q" />
+            </HBox>
+        </VBox>
+        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="Length of the array = N" textAlignment="RIGHT" wrapText="true">
+            <padding>
+                <Insets right="50.0" />
+            </padding>
+            <font>
+                <Font name="System Italic" size="11.0" />
+            </font>
+            <VBox.margin>
+                <Insets top="10.0" />
+            </VBox.margin>
+        </Label>
+        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="Number of clients = M" textAlignment="RIGHT" wrapText="true">
+            <padding>
+                <Insets right="50.0" />
+            </padding>
+            <font>
+                <Font name="System Italic" size="11.0" />
+            </font>
+        </Label>
+        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="Millis between queries = ∆" textAlignment="RIGHT" wrapText="true">
+            <padding>
+                <Insets right="50.0" />
+            </padding>
+            <font>
+                <Font name="System Italic" size="11.0" />
+            </font>
+        </Label>
+        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="Queries per client = Q" textAlignment="RIGHT" wrapText="true">
+            <padding>
+                <Insets right="50.0" />
+            </padding>
+            <font>
+                <Font name="System Italic" size="11.0" />
+            </font>
+        </Label>
+        <HBox alignment="BOTTOM_RIGHT" spacing="10.0">
+            <VBox.margin>
+                <Insets bottom="10.0" top="10.0" />
+            </VBox.margin>
+            <Label text="Explored value:" textAlignment="RIGHT" wrapText="true" />
+            <ChoiceBox fx:id="propertyCB" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="50.0">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <Property fx:value="N"/>
+                        <Property fx:value="M"/>
+                        <Property fx:value="D"/>
+                    </FXCollections>
+                </items>
+            </ChoiceBox>
+        </HBox>
+        <HBox alignment="CENTER" spacing="5.0">
+            <padding>
+                <Insets bottom="10.0" top="10.0" />
+            </padding>
+            <VBox alignment="CENTER" spacing="5.0">
+                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Iterations:" textAlignment="CENTER" wrapText="true">
+                    <font>
+                        <Font size="11.0" />
+                    </font>
+                </Label>
+                <TextField fx:id="iterationsTF" maxWidth="-Infinity" prefWidth="70.0" />
+            </VBox>
+            <VBox alignment="CENTER" spacing="5.0">
+                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Step:" textAlignment="CENTER" wrapText="true">
+                    <font>
+                        <Font size="11.0" />
+                    </font>
+                </Label>
+                <TextField fx:id="stepTF" maxWidth="-Infinity" prefWidth="70.0" />
+            </VBox>
+        </HBox>
+        <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="8.0">
+            <Button contentDisplay="CENTER" mnemonicParsing="false" onMouseClicked="#stress" stylesheets="@stress.css" />
+            <Label text="Stress it!" textAlignment="CENTER" wrapText="true" />
+        </VBox>
+    </VBox>
+    <LineChart fx:id="chart" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" title="Measuring results">
+        <xAxis>
+            <NumberAxis forceZeroInRange="false" label="Iterations" upperBound="15" />
+        </xAxis>
+        <yAxis>
+            <NumberAxis forceZeroInRange="false" label="ms" upperBound="3000.0" />
+            <NumberAxis side="LEFT" />
+        </yAxis>
+    </LineChart>
+</HBox>
