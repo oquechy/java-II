@@ -1,0 +1,22 @@
+@font-face {
+    -fx-font-family: 'Permanent Marker';
+    src: url('fonts/PermanentMarker-Regular.ttf');
+}
+
+.cross {
+    -fx-font-size: 30pt;
+    -fx-font-family: 'Permanent Marker', cursive;
+    -fx-text-fill: indianred;
+    -fx-opacity: 1;
+}
+
+.nought {
+    -fx-font-size: 30pt;
+    -fx-font-family: 'Permanent Marker', cursive;
+    -fx-text-fill: cornflowerblue;
+    -fx-opacity: 1;
+}
+
+.cell {
+    -fx-background-color: white;
+}
