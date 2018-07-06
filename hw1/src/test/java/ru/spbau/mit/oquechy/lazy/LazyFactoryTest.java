@@ -12,6 +12,7 @@ import static org.junit.Assert.*;
 
 public class LazyFactoryTest {
 
+    @NotNull
     private final static String[] ARRAY = {"Lisa", "Loves", "Java", "But", "Also", "Sleeping",
             "(", "And", "Playing", "With", "Cats", ")"};
 
@@ -40,6 +41,7 @@ public class LazyFactoryTest {
         @NotNull final Supplier<Integer> supplier = new Supplier<Integer>() {
             @NotNull
             private Integer x = 0;
+            @NotNull
             private final Object mutex = new Object();
 
             @NotNull
@@ -125,7 +127,7 @@ public class LazyFactoryTest {
     public void testCreateMultiThreadLazyEveryTimeSameObject() {
 
         @NotNull final Supplier<String> cyclicSupplier = new Supplier<String>() {
-            int i = 0;
+            private int i = 0;
 
             @Override
             public String get() {
