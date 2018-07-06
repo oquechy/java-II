@@ -1,0 +1,8 @@
+.button {
+    -fx-min-height: 80px;
+    -fx-min-width: 80px;
+    -fx-background-image: url('Stress-64-0.png');
+    -fx-background-size: 64px 64px;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+}

@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package stress;
+
+option java_package = "ru.spbau.mit.oquechy.stress";
+option java_outer_classname = "MessageProto";
+
+message Message {
+    repeated int32 number = 1;
+}
